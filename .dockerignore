@@ -1,0 +1,8 @@
+.flaskenv
+Dockerfile
+Makefile
+docker-compose.yml
+.tox
+venv
+logs
+cookiecutter-options.yml

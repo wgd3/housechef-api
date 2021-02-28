@@ -1,0 +1,12 @@
+FLASK_ENV=development
+FLASK_APP=housechef.app:create_app
+SECRET_KEY=changeme
+DATABASE_URI=sqlite:////tmp/housechef.db
+CELERY_BROKER_URL=amqp://guest:guest@localhost/
+CELERY_RESULT_BACKEND_URL=rpc://
+
+MAIL_SERVER=<none>
+MAIL_PORT=<none>
+MAIL_USE_TLS=1
+MAIL_USERNAME=<none>
+MAIL_PASSWORD=<none>

@@ -1,0 +1,50 @@
+# WARNING: this file is not suitable for production, please use with caution
+version: '3'
+
+services:
+  web:
+    image: housechef
+    build: .
+    command: gunicorn -b 0.0.0.0:5000 housechef.wsgi:app
+    env_file:
+      - ./.flaskenv
+    environment:
+#      - DATABASE_URI=sqlite:////db/housechef.db
+      - DATABASE_URI=postgresql://housechef:housechef@db/housechef
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq
+      - CELERY_RESULT_BACKEND_URL=redis://redis
+    volumes:
+      - ./housechef:/code/housechef
+      - ./db/:/db/
+    ports:
+      - "5050:5000"
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: housechef
+      POSTGRES_PASSWORD: housechef
+      POSTGRES_DB: housechef
+    volumes:
+      - ./db/:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - "5672:5672"
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+  celery:
+    image: housechef
+    command: "celery worker -A housechef.celery_app:app -E --loglevel=debug"
+    env_file:
+      - ./.flaskenv
+    volumes:
+      - .:/code
+    depends_on:
+      - rabbitmq
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq
+      - CELERY_RESULT_BACKEND_URL=redis://redis
