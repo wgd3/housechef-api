@@ -50,10 +50,10 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     @jwt.user_identity_loader
     def user_identity_lookup(user):
         return {
-            "id": user["id"],
-            "username": user["username"],
-            "email": user["email"],
-            "household_id": user["household_id"],
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "household_id": user.household_id,
         }
 
     # Register a callback function that loads a user from your database whenever

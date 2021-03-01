@@ -1,12 +1,30 @@
+from flask import url_for
 from flask_jwt_extended import get_current_user, jwt_required
-from flask_restx import fields, Namespace, Resource
+from flask_restx import fields, Namespace, Resource, reqparse, inputs
+from flask_sqlalchemy import Pagination
 from sqlalchemy import or_
 
 from housechef.api.v1.schemas import RecipeSchema
 from housechef.database.models import Recipe
+from ..models import links_envelope, meta_envelope, response_envelope, pagination_parser
 from ..dao import SpoonacularDAO
 
 ns = Namespace("Recipes", description="Recipe Operations")
+
+response_env = ns.model(response_envelope.get("name"), response_envelope.get("fields"))
+meta_env = ns.model(meta_envelope.get("name"), meta_envelope.get("fields"))
+links_env = ns.model(links_envelope.get("name"), links_envelope.get("fields"))
+
+get_recipe_model = ns.clone("get_recipe_model", response_env, {"data": fields.Raw})
+get_recipe_list_model = ns.inherit(
+    "get_recipe_list_model",
+    response_env,
+    {
+        "data": fields.List(fields.Raw),
+        "_links": fields.Nested(links_env),
+        "_meta": fields.Nested(meta_env),
+    },
+)
 
 import_model = ns.model("recipe_import_model", {"url": fields.Url})
 
@@ -15,10 +33,14 @@ import_model = ns.model("recipe_import_model", {"url": fields.Url})
 class RecipeResource(Resource):
     """Single Recipe resource"""
 
+    @ns.marshal_with(response_env)
     def get(self, recipe_id: int):
         schema = RecipeSchema()
         recipe = Recipe.query.get_or_404(recipe_id)
-        return {"recipe": schema.dump(recipe)}
+        return {
+            "message": f"Returning recipe {recipe.name}",
+            "data": schema.dump(recipe),
+        }
 
     def put(self, recipe_id: int):
         pass
@@ -31,22 +53,70 @@ class RecipeResource(Resource):
 class RecipeListResource(Resource):
     """Multi-recipe resource"""
 
+    list_param_parser = pagination_parser.copy()
+    list_param_parser.add_argument(
+        "directions",
+        type=inputs.boolean,
+        default=False,
+        help="Include directions from each recipe",
+    )
+    list_param_parser.add_argument(
+        "ingredients",
+        type=inputs.boolean,
+        default=False,
+        help="Include ingredients from each recipe",
+    )
+
     @jwt_required(optional=True)
-    @ns.doc(security="apiKey")
+    @ns.doc(security="apiKey", parser=list_param_parser)
+    @ns.marshal_with(get_recipe_list_model)
     def get(self):
-        schema = RecipeSchema(many=True)
+
+        args = self.list_param_parser.parse_args()
+        skip_fields = []
+        if args.get("directions", False) is False:
+            skip_fields.append("directions")
+        if args.get("ingredients", False) is False:
+            skip_fields.append("ingredients")
+
+        schema = RecipeSchema(many=True, exclude=set(skip_fields))
         user = get_current_user()
+
         if user is None:
-            recipes = Recipe.query.filter(Recipe.household_id == None).all()
+            recipes: Pagination = Recipe.query.filter(
+                Recipe.household_id == None
+            ).paginate(per_page=args.get("per_page"), page=args.get("page"))
         else:
-            recipes = Recipe.query.filter(
+            recipes: Pagination = Recipe.query.filter(
                 or_(
                     Recipe.household_id == None,
                     Recipe.household_id == user.household_id,
                 )
-            ).all()
+            ).paginate(per_page=args.get("per_page"), page=args.get("page"))
 
-        return {"recipes": schema.dump(recipes)}, 200
+        return {
+            "_meta": {
+                "per_page": recipes.per_page,
+                "page": recipes.page,
+                "total_pages": recipes.pages,
+                "total_items": recipes.total,
+            },
+            "_links": {
+                "self": url_for("api_v1.list_recipes", **args),
+                "next": url_for(
+                    "api_v1.list_recipes", **{**args, **{"page": recipes.next_num}}
+                )
+                if recipes.has_next
+                else None,
+                "prev": url_for(
+                    "api_v1.list_recipes", **{**args, **{"page": recipes.prev_num}}
+                )
+                if recipes.has_prev
+                else None,
+            },
+            "message": f"returning {recipes.total} recipes",
+            "data": schema.dump(recipes.items, many=True),
+        }, 200
 
     def post(self):
         pass

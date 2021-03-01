@@ -1,4 +1,4 @@
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 from housechef.extensions import db
 from ..mixins import (
@@ -59,9 +59,71 @@ class Recipe(PkModel, TimestampMixin, LookupByNameMixin):
     def __repr__(self):
         return f"<Recipe #{self.id} - {self.name}>"
 
+    @hybrid_property
+    def calories(self):
+        return round(
+            sum([i.calories for i in self.ingredients if i.calories is not None]), 0
+        )
+
+    @hybrid_property
+    def fat(self):
+        return round(sum([i.fat for i in self.ingredients if i.fat is not None]), 1)
+
+    @hybrid_property
+    def protein(self):
+        return round(
+            sum([i.protein for i in self.ingredients if i.protein is not None]), 1
+        )
+
+    @hybrid_property
+    def carbohydrates(self):
+        return round(
+            sum(
+                [
+                    i.carbohydrates
+                    for i in self.ingredients
+                    if i.carbohydrates is not None
+                ]
+            ),
+            1,
+        )
+
+    @hybrid_property
+    def net_carbohydrates(self):
+        return round(
+            sum(
+                [
+                    i.net_carbohydrates
+                    for i in self.ingredients
+                    if i.net_carbohydrates is not None
+                ]
+            ),
+            1,
+        )
+
+    @hybrid_property
+    def sodium(self):
+        return round(
+            sum([i.sodium for i in self.ingredients if i.sodium is not None]), 1
+        )
+
+    @hybrid_property
+    def fiber(self):
+        return round(sum([i.fiber for i in self.ingredients if i.fiber is not None]), 1)
+
     @property
     def slug(self) -> str:
         return self.name.lower().replace(" ", "-")
+
+    @property
+    def macros(self):
+        return {
+            "calories": self.calories,
+            "fat": self.fat,
+            "protein": self.protein,
+            "carbohydrates": self.carbohydrates,
+            "net_carbohydrates": self.net_carbohydrates,
+        }
 
     @property
     def directions(self):

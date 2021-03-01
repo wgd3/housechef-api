@@ -1,6 +1,7 @@
 from typing import List
 
 from flask import current_app
+from sqlalchemy import or_
 
 from housechef.extensions import spoon
 from housechef.database.models import (
@@ -20,6 +21,7 @@ class SpoonacularDAO(object):
     def import_recipe(url: str, household_id: int = None):
         current_app.logger.debug(f"Attempting to import recipe from {url}")
         recipe = None
+        nutrition_ingredients = []
         resp = spoon.extract_recipe_from_website(url)
         if resp.ok:
             recipe_data = resp.json()
@@ -55,7 +57,10 @@ class SpoonacularDAO(object):
                         f"Looking to see if {ingredient_name} is already in the database"
                     )
                     ingredient = Ingredient.query.filter(
-                        Ingredient.name == ingredient_name
+                        or_(
+                            Ingredient.name == ingredient_name,
+                            Ingredient.spoonacular_id == i["id"],
+                        )
                     ).one_or_none()
                     if ingredient is None:
                         # No matching ingredient in the database, create one before associating with recipe
@@ -86,15 +91,21 @@ class SpoonacularDAO(object):
                     )
                     recipe.ingredients.append(recipe_ingredient)
 
+                    nutrition_ingredients.append(
+                        dict(
+                            ingredient_id=ingredient.id,
+                            ingredient_string=i["originalString"],
+                            spoonacular_id=i["id"],
+                        )
+                    )
+
                 current_app.logger.debug(
                     f"All ingredients created/added to recipe, saving..."
                 )
                 recipe.save()
 
                 # TODO finish implementing nutrition lookup
-                # get_recipe_ingredient_nutrition.delay(
-                #     [i.ingredient_id for i in recipe.ingredients], recipe.id
-                # )
+                get_recipe_ingredient_nutrition.delay(nutrition_ingredients, recipe.id)
 
             except Exception as e:
                 current_app.logger.error(

@@ -1,4 +1,4 @@
-from marshmallow import fields
+from marshmallow import fields, pre_dump, post_dump
 
 from housechef.database.models import Recipe
 from housechef.extensions import ma, db
@@ -11,6 +11,8 @@ class RecipeSchema(ma.SQLAlchemyAutoSchema):
 
     directions = fields.Raw()
     _directions = fields.Raw(load_only=True)
+
+    macros = fields.Dict(data_key="macros")
 
     ingredients = fields.List(
         fields.Nested(
@@ -40,3 +42,4 @@ class RecipeSchema(ma.SQLAlchemyAutoSchema):
         model = Recipe
         sqla_session = db.session
         load_instance = True
+        ordered = True

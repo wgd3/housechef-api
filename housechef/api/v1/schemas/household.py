@@ -4,6 +4,7 @@ from housechef.database.models import Household
 from housechef.extensions import ma, db
 
 from .recipe import RecipeSchema
+from .user import UserSchema
 
 
 class HouseholdSchema(ma.SQLAlchemyAutoSchema):
@@ -16,6 +17,7 @@ class HouseholdSchema(ma.SQLAlchemyAutoSchema):
             only=("name", "image_url", "rating", "id", "time_created", "time_updated"),
         )
     )
+    users = fields.List(fields.Nested(UserSchema, only=("id", "username", "active")))
 
     class Meta:
         model = Household

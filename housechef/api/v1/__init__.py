@@ -3,7 +3,7 @@ from flask_restx import Api
 from marshmallow import ValidationError
 
 from housechef.extensions import apispec
-from .namespaces import user_ns, recipe_ns, auth_ns
+from .namespaces import user_ns, recipe_ns, auth_ns, ingredient_ns, households_ns
 
 api_v1 = Blueprint("api_v1", __name__, url_prefix="/v1", subdomain="api")
 api = Api(
@@ -23,6 +23,8 @@ api = Api(
 api.add_namespace(user_ns, path="/users")
 api.add_namespace(recipe_ns, path="/recipes")
 api.add_namespace(auth_ns, path="/auth")
+api.add_namespace(ingredient_ns, path="/ingredients")
+api.add_namespace(households_ns, path="/households")
 
 
 # @api_v1.before_app_first_request
