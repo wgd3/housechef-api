@@ -56,11 +56,14 @@ class SpoonacularDAO(object):
                     current_app.logger.debug(
                         f"Looking to see if {ingredient_name} is already in the database"
                     )
+                    # ingredient = Ingredient.query.filter(
+                    #     or_(
+                    #         Ingredient.name == ingredient_name,
+                    #         Ingredient.spoonacular_id == i["id"],
+                    #     )
+                    # ).one_or_none()
                     ingredient = Ingredient.query.filter(
-                        or_(
-                            Ingredient.name == ingredient_name,
-                            Ingredient.spoonacular_id == i["id"],
-                        )
+                        Ingredient.spoonacular_id == i["id"],
                     ).one_or_none()
                     if ingredient is None:
                         # No matching ingredient in the database, create one before associating with recipe

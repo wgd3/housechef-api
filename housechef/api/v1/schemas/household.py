@@ -23,3 +23,4 @@ class HouseholdSchema(ma.SQLAlchemyAutoSchema):
         model = Household
         sqla_session = db.session
         load_instance = True
+        exclude = ("meals",)

@@ -7,6 +7,7 @@ from .cuisine import CuisineSchema
 from .tag import TagSchema
 from .note import NoteSchema
 from .household import HouseholdSchema
+from .meal import MealSchema
 
 __all__ = [
     "UserSchema",
@@ -18,4 +19,5 @@ __all__ = [
     "TagSchema",
     "NoteSchema",
     "HouseholdSchema",
+    "MealSchema",
 ]

@@ -28,6 +28,12 @@ def get_recipe_ingredient_nutrition(
         resp_json = resp.json()
         # for each ingredient returned in the API response
         for ingredient_nutrition_obj in resp_json:
+            # if the id is missing, the ingredient couldn't be found by spoonacular
+            if "id" not in ingredient_nutrition_obj:
+                current_app.logger.debug(
+                    f"Ingredient {ingredient_nutrition_obj['original']} does not have a Spoonacular ID, skipping..."
+                )
+                continue
             # find the matching ingredient that was originally passed in
             recipe_ingredient_details = next(
                 (
@@ -177,8 +183,12 @@ def get_recipe_ingredient_nutrition(
                 recipe_ingredient.zinc = next(
                     (n["amount"] for n in nutrients if n["name"] == "Zinc"), None
                 )
-
+                db.session.add(recipe_ingredient)
                 db.session.commit()
+
+    except KeyError as ke:
+        current_app.logger.error(f"Error looking up key '{str(ke)}'")
+
     except Exception as e:
         current_app.logger.error(f"Error while parsing ingredients:\n{str(e)}")
 
