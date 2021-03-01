@@ -3,7 +3,7 @@ from flask import request
 from flask_restx import Namespace, Resource
 from flask_jwt_extended import current_user, jwt_required
 
-from housechef.database.models import User, Household
+from housechef.database.models import User, Household, Role, UserRole
 from housechef.extensions import db
 from ..schemas import UserSchema
 

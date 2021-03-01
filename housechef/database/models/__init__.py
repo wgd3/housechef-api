@@ -12,6 +12,8 @@ from .recipe_tag import RecipeTag
 from .meal_recipe import MealRecipe
 from .meal import Meal
 from .recipe_cuisines import RecipeCuisine
+from .role import Role
+from .user_roles import UserRole
 
 __all__ = [
     "User",
@@ -28,4 +30,6 @@ __all__ = [
     "MealRecipe",
     "RecipeCuisine",
     "RecipeDishType",
+    "Role",
+    "UserRole",
 ]

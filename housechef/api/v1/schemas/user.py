@@ -10,6 +10,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     time_created = fields.DateTime(dump_only=True)
     time_updated = fields.DateTime(dump_only=True)
     password = ma.String(load_only=True, required=True)
+    roles = fields.List(fields.String)
 
     class Meta:
         model = User

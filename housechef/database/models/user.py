@@ -19,9 +19,9 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     # id
     # time_created
     # time_updated
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(80), unique=True, nullable=False)
-    _password = db.Column("password", db.String(255), nullable=False)
+    username = db.Column(db.String, unique=True, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
+    _password = db.Column("password", db.String, nullable=False)
     active = db.Column(db.Boolean, default=True)
     first_name = db.Column(db.String)
     last_name = db.Column(db.String)
@@ -35,6 +35,9 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     tags = relationship("Tag", back_populates="user")
     household = relationship("Household", back_populates="users")
     household_id = reference_col("households")
+    roles = relationship(
+        "UserRole", back_populates="user", cascade="all, delete-orphan"
+    )
 
     @hybrid_property
     def password(self):
@@ -65,6 +68,9 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     def user_lookup_callback(_jwt_header, jwt_data):
         identity = jwt_data["sub"]
         return User.query.filter_by(id=identity["id"]).one_or_none()
+
+    def has_role(self, role):
+        return role in self.roles
 
     def __repr__(self):
         return "<User %s>" % self.username
