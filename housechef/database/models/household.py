@@ -24,6 +24,9 @@ class Household(PkModel, TimestampMixin):
     recipes = relationship(
         "Recipe", back_populates="household", cascade="all, delete-orphan"
     )
+    meals = relationship(
+        "Meal", back_populates="household", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return "<Household %s>" % self.name

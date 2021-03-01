@@ -13,7 +13,10 @@ class Meal(PkModel, TimestampMixin):
     date = Column(db.Date, nullable=False)
 
     """Relationships"""
-    user = relationship("User", back_populates="meals")
-    user_id = reference_col("users", nullable=False)
+    household = relationship("Household", back_populates="meals")
+    household_id = reference_col("households", nullable=False)
 
     recipes = relationship("MealRecipe", back_populates="meal")
+
+    def __repr__(self):
+        return f"<Meal for house {self.household.name} on {self.date}>"

@@ -42,7 +42,11 @@ class LogInResource(Resource):
         if user is None or not pwd_context.verify(password, user.password):
             return jsonify({"msg": "Bad credentials"}), HTTPStatus.BAD_REQUEST
 
-        access_token = create_access_token(identity=user)
+        roles = [r.role.name for r in user.roles]
+
+        access_token = create_access_token(
+            identity=user, additional_claims={"roles": roles}
+        )
         refresh_token = create_refresh_token(identity=user)
 
         return {

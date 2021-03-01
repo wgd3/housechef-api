@@ -31,7 +31,6 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     gender = db.Column(db.Enum("male", "female", name="gender_enum"))
 
     """Relationships"""
-    meals = relationship("Meal", back_populates="user")
     tags = relationship("Tag", back_populates="user")
     household = relationship("Household", back_populates="users")
     household_id = reference_col("households")
