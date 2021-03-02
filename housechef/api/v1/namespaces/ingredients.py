@@ -1,16 +1,16 @@
 from http import HTTPStatus
 
-from flask_restx import Namespace, fields, Resource, inputs
+from flask_restx import fields, inputs, Namespace, Resource
 
 from housechef.database.models import Ingredient
-from ..utils import (
-    set_sort_order,
-    set_search_filter,
-    generate_query_metadata,
-    generate_link_metadata,
-)
+from ..models import links_envelope, meta_envelope, pagination_parser, response_envelope
 from ..schemas import IngredientSchema
-from ..models import links_envelope, meta_envelope, response_envelope, pagination_parser
+from ..utils import (
+    generate_link_metadata,
+    generate_query_metadata,
+    set_search_filter,
+    set_sort_order,
+)
 
 ns = Namespace("Ingredients", description="Ingredient Operations")
 

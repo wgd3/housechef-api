@@ -2,7 +2,6 @@ from housechef.extensions import db
 
 
 class RecipeTag(db.Model):
-
     __tablename__ = "recipe_tags"
     __table_args__ = (
         db.UniqueConstraint("recipe_id", "tag_id", name="_recipe_tag_constraint"),

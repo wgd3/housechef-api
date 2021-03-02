@@ -1,5 +1,6 @@
 from flask_mail import Message
-from housechef.extensions import mail, celery
+
+from housechef.extensions import celery, mail
 
 
 @celery.task

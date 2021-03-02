@@ -1,12 +1,10 @@
+from sqlalchemy.ext.associationproxy import association_proxy
+
 from housechef.extensions import db
-from ..mixins import Column, PkModel, TimestampMixin, reference_col, relationship
-
-
-from sqlalchemy.ext.hybrid import hybrid_property
+from ..mixins import Column, PkModel, reference_col, relationship, TimestampMixin
 
 
 class Meal(PkModel, TimestampMixin):
-
     __tablename__ = "meals"
 
     """Columns"""
@@ -19,7 +17,13 @@ class Meal(PkModel, TimestampMixin):
     household = relationship("Household", back_populates="meals")
     household_id = reference_col("households", nullable=False)
 
-    recipes = relationship("MealRecipe", back_populates="meal")
+    meal_recipes = relationship(
+        "MealRecipe", back_populates="meal", cascade="all, delete-orphan"
+    )
+    recipes = association_proxy(
+        "meal_recipes",
+        "recipe",
+    )
 
     @property
     def nutrition(self):

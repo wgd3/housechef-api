@@ -1,9 +1,8 @@
 from housechef.extensions import db
-from ..mixins import Column, PkModel, TimestampMixin, reference_col, relationship
+from ..mixins import Column, PkModel, reference_col, relationship, TimestampMixin
 
 
 class Note(PkModel, TimestampMixin):
-
     __tablename__ = "notes"
 
     """Columns"""

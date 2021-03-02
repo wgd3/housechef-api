@@ -1,15 +1,16 @@
 from http import HTTPStatus
+
 from flask import jsonify
-from flask_restx import Namespace, fields, Resource
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
-    jwt_required,
     get_jwt_identity,
+    jwt_required,
 )
+from flask_restx import fields, Namespace, Resource
 
-from housechef.database.models import User, Household
-from housechef.extensions import pwd_context, jwt
+from housechef.database.models import User
+from housechef.extensions import pwd_context
 
 ns = Namespace("Auth", description="JWT Operations")
 
@@ -22,7 +23,7 @@ login_post_model = ns.model(
 refresh_resp_model = ns.model("refresh_resp_model", {"access_token": fields.String})
 
 
-@ns.route("/login")
+@ns.route("/login", endpoint="auth_login")
 @ns.response(HTTPStatus.OK.value, HTTPStatus.OK.phrase, model=token_get_model)
 @ns.response(HTTPStatus.BAD_REQUEST.value, HTTPStatus.BAD_REQUEST.phrase)
 class LogInResource(Resource):
@@ -55,12 +56,13 @@ class LogInResource(Resource):
         }, HTTPStatus.OK
 
 
-@ns.route("/refresh")
+@ns.route("/refresh", endpoint="auth_refresh")
 @ns.response(HTTPStatus.OK.value, HTTPStatus.OK.phrase, model=refresh_resp_model)
 class RefreshTokenResource(Resource):
     @ns.doc(security="apiKey")
     @jwt_required(refresh=True)
     def post(self):
-        user = get_jwt_identity()
+        user_identity = get_jwt_identity()
+        user = User.get_by_id(user_identity["id"])
         access_token = create_access_token(identity=user)
         return {"access_token": access_token}, HTTPStatus.OK

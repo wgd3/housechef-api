@@ -1,11 +1,13 @@
 from http import HTTPStatus
-from flask import request
-from flask_restx import Namespace, Resource
-from flask_jwt_extended import current_user, jwt_required
 
-from housechef.database.models import User, Household, Role, UserRole
+from flask import request
+from flask_jwt_extended import jwt_required
+from flask_restx import Namespace, Resource
+
+from housechef.database.models import User
 from housechef.extensions import db
 from ..schemas import UserSchema
+from ..utils import role_required
 
 ns = Namespace("Users", description="User Operations")
 
@@ -21,13 +23,13 @@ ns = Namespace("Users", description="User Operations")
 class UserResource(Resource):
     """Single object resource"""
 
-    @jwt_required
+    @jwt_required()
     def get(self, user_id):
         schema = UserSchema()
         user = User.query.get_or_404(user_id)
         return {"user": schema.dump(user)}
 
-    @jwt_required
+    @jwt_required()
     def put(self, user_id):
         schema = UserSchema(partial=True)
         user = User.query.get_or_404(user_id)
@@ -37,7 +39,7 @@ class UserResource(Resource):
 
         return {"msg": "user updated", "user": schema.dump(user)}
 
-    @jwt_required
+    @jwt_required()
     def delete(self, user_id):
         user = User.query.get_or_404(user_id)
         db.session.delete(user)
@@ -57,6 +59,8 @@ class UserResource(Resource):
 class UserList(Resource):
     """Creation and get_all"""
 
+    @jwt_required()
+    @role_required("Admin")
     def get(self):
         schema = UserSchema(many=True)
         query = User.query.all()

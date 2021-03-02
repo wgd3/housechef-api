@@ -1,27 +1,28 @@
-from http import HTTPStatus
 import datetime as dt
+from http import HTTPStatus
+
+from marshmallow.utils import from_iso_date
+
 from flask import current_app
-from flask_jwt_extended import current_user, get_current_user, jwt_required
+from flask_jwt_extended import get_current_user, jwt_required
+from flask_restx import fields, inputs, Namespace, reqparse, Resource
 
-
-from flask_restx import Namespace, fields, Resource, inputs, reqparse
-
+from housechef.database.models import Household, Meal, MealRecipe, Recipe
 from housechef.extensions import db
-from housechef.database.models import Household, Meal, Recipe, MealRecipe
 from ..dao import HouseholdDAO
-from ..utils import (
-    set_sort_order,
-    set_search_filter,
-    generate_query_metadata,
-    generate_link_metadata,
-)
-from ..schemas import HouseholdSchema, MealSchema
 from ..models import (
     links_envelope,
-    meta_envelope,
-    response_envelope,
-    pagination_parser,
     meal_model,
+    meta_envelope,
+    pagination_parser,
+    response_envelope,
+)
+from ..schemas import HouseholdSchema, MealSchema
+from ..utils import (
+    generate_link_metadata,
+    generate_query_metadata,
+    set_sort_order,
+    role_required,
 )
 
 ns = Namespace("Households", description="Household Operations")
@@ -53,9 +54,10 @@ ns.models[meal_model.name] = meal_model
     HTTPStatus.SERVICE_UNAVAILABLE.value, HTTPStatus.SERVICE_UNAVAILABLE.phrase
 )
 class HouseholdList(Resource):
-
     parser = pagination_parser.copy()
 
+    @jwt_required()
+    @role_required("Admin")
     def get(self):
         args = self.parser.parse_args()
         schema = HouseholdSchema(many=True)
@@ -71,6 +73,34 @@ class HouseholdList(Resource):
         }, 200
 
 
+@ns.route("<int:household_id>", endpoint="get_household")
+@ns.response(HTTPStatus.OK.value, HTTPStatus.OK.phrase)
+@ns.response(HTTPStatus.FORBIDDEN.value, HTTPStatus.FORBIDDEN.phrase)
+@ns.response(HTTPStatus.UNAUTHORIZED.value, HTTPStatus.UNAUTHORIZED.phrase)
+@ns.response(
+    HTTPStatus.SERVICE_UNAVAILABLE.value, HTTPStatus.SERVICE_UNAVAILABLE.phrase
+)
+class HouseholdResource(Resource):
+    @jwt_required()
+    @ns.doc(security="apiKey")
+    def get(self, household_id: int):
+        user = get_current_user()
+        schema = HouseholdSchema()
+        if household_id == user.household_id:
+            household = Household.get_by_id(user.household_id)
+
+        if household_id != user.household_id:
+            return {
+                "message": "Requested household does not belong to the current user",
+                "data": None,
+            }, 403
+
+        return {
+            "message": f"Returning household {household.name}",
+            "data": schema.dump(household),
+        }, 200
+
+
 @ns.route("/meals", endpoint="household_meals")
 @ns.response(HTTPStatus.OK.value, HTTPStatus.OK.phrase)
 @ns.response(HTTPStatus.NOT_FOUND.value, HTTPStatus.NOT_FOUND.phrase)
@@ -78,7 +108,6 @@ class HouseholdList(Resource):
     HTTPStatus.SERVICE_UNAVAILABLE.value, HTTPStatus.SERVICE_UNAVAILABLE.phrase
 )
 class HouseholdMealListResource(Resource):
-
     date_parser = reqparse.RequestParser()
     date_parser.add_argument(
         "date", type=inputs.date, help="Specific day to search for"
@@ -104,21 +133,31 @@ class HouseholdMealListResource(Resource):
         HTTPStatus.CREATED.value, HTTPStatus.CREATED.phrase, model=response_env
     )
     def post(self):
+        user = get_current_user()
 
         try:
             schema = MealSchema()
+
+            # make sure these match!
+            if user.household_id != ns.payload["household_id"]:
+                raise IndexError("User household does not match meal payload!")
+
             meal = Meal.create(
-                date=ns.payload["date"], household_id=ns.payload["household_id"]
+                date=from_iso_date(ns.payload["date"]),
+                household_id=ns.payload["household_id"],
+                recipes=[],
             )
             current_app.logger.debug(f"Created meal with ID #{meal.id} for {meal.date}")
             if "recipes" in ns.payload and len(ns.payload["recipes"]) > 0:
                 for recipe_id in ns.payload["recipes"]:
                     recipe = Recipe.get_by_id(recipe_id)
-                    meal_recipe = MealRecipe(recipe_id=recipe.id, meal_id=meal.id)
-                    meal.recipes.append(meal_recipe)
+                    meal.recipes.append(recipe)
                     current_app.logger.debug(f"added {recipe.name} to meal #{meal.id}")
                 meal.save()
 
+        except ValueError as ve:
+            current_app.logger.debug(f"Date format prevented meal from being created")
+            return {"message": str(ve), "data": None}, 400
         except Exception as e:
             current_app.logger.error(f"Error while creating meal: {str(e)}")
             return {"message": f"Could not create meal. {str(e)}", "data": None}, 400

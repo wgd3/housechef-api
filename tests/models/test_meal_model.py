@@ -1,7 +1,7 @@
-def test_create_meal(db, meal_factory, user_factory, recipe_factory):
-    user = user_factory.create()
+def test_create_meal(db, meal_factory, household_factory, recipe_factory):
+    household = household_factory.create()
     recipes = recipe_factory.create_batch(3)
-    meal = meal_factory.create(user=user)
+    meal = meal_factory.create(household=household)
 
     db.session.add(meal)
     db.session.commit()
@@ -12,5 +12,5 @@ def test_create_meal(db, meal_factory, user_factory, recipe_factory):
 
     db.session.commit()
 
-    assert meal.user_id == user.id
+    assert meal.household_id == household.id
     # assert len(meal.recipes) == 3

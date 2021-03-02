@@ -5,9 +5,9 @@ from logging.handlers import RotatingFileHandler
 
 from flask import Flask
 
-from housechef.api.v1 import api_v1
 from housechef import commands
-from housechef.extensions import apispec, celery, db, jwt, migrate, mail, spoon
+from housechef.api.v1 import api_v1
+from housechef.extensions import apispec, celery, db, jwt, mail, migrate, spoon
 
 
 def create_app(testing=False) -> Flask:

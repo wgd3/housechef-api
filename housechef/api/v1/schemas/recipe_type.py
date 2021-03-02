@@ -1,9 +1,8 @@
 from housechef.database.models import DishType
-from housechef.extensions import ma, db
+from housechef.extensions import db, ma
 
 
 class RecipeTypeSchema(ma.SQLAlchemyAutoSchema):
-
     id = ma.Int(dump_only=True)
 
     class Meta:

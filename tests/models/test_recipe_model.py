@@ -11,17 +11,17 @@ def test_create_recipe(app, recipe_factory):
     assert isinstance(recipe.directions, list)
 
 
-def test_create_recipe_with_user(db, recipe_factory, user_factory):
-    user = user_factory.create()
+def test_create_recipe_with_user(db, recipe_factory, household_factory):
+    household = household_factory.create()
 
-    db.session.add(user)
+    db.session.add(household)
     db.session.commit()
 
-    recipe = recipe_factory.create(user=user)
+    recipe = recipe_factory.create(household=household)
     # recipe.submitted_by = user
 
     db.session.add(recipe)
     db.session.commit()
 
-    assert recipe.user_id == user.id
-    assert user.recipes is not None
+    assert recipe.household_id == household.id
+    assert len(household.recipes) == 1

@@ -3,9 +3,9 @@ from ..mixins import (
     Column,
     LookupByNameMixin,
     PkModel,
-    TimestampMixin,
-    relationship,
     reference_col,
+    relationship,
+    TimestampMixin,
 )
 
 

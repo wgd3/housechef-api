@@ -71,5 +71,10 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     def has_role(self, role):
         return role in self.roles
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(**kwargs)
+        if len(self.roles) == 0:
+            pass
+
     def __repr__(self):
         return "<User %s>" % self.username

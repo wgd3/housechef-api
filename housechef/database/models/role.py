@@ -1,12 +1,5 @@
 from housechef.extensions import db
-from ..mixins import (
-    Column,
-    LookupByNameMixin,
-    PkModel,
-    TimestampMixin,
-    reference_col,
-    relationship,
-)
+from ..mixins import Column, PkModel, relationship, TimestampMixin
 
 
 class Role(PkModel, TimestampMixin):

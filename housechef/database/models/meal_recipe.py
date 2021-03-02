@@ -2,7 +2,6 @@ from housechef.extensions import db
 
 
 class MealRecipe(db.Model):
-
     __tablename__ = "meal_recipes"
 
     """Columns"""
@@ -14,5 +13,9 @@ class MealRecipe(db.Model):
     )
 
     """Relationships"""
-    recipe = db.relationship("Recipe", back_populates="meals")
-    meal = db.relationship("Meal", back_populates="recipes")
+    recipe = db.relationship("Recipe", lazy="joined")
+    meal = db.relationship("Meal", back_populates="meal_recipes")
+
+    def __init__(self, recipe=None, meal=None):
+        self.recipe = recipe
+        self.meal = meal

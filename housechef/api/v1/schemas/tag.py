@@ -1,9 +1,8 @@
 from housechef.database.models import Tag
-from housechef.extensions import ma, db
+from housechef.extensions import db, ma
 
 
 class TagSchema(ma.SQLAlchemyAutoSchema):
-
     id = ma.Int(dump_only=True)
 
     class Meta:

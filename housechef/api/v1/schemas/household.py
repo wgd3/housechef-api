@@ -1,14 +1,12 @@
 from marshmallow import fields
 
 from housechef.database.models import Household
-from housechef.extensions import ma, db
-
+from housechef.extensions import db, ma
 from .recipe import RecipeSchema
 from .user import UserSchema
 
 
 class HouseholdSchema(ma.SQLAlchemyAutoSchema):
-
     id = ma.Int(dump_only=True)
 
     recipes = fields.List(

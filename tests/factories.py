@@ -22,13 +22,6 @@ class IngredientFactory(factory.Factory):
         model = Ingredient
 
 
-class MealFactory(factory.Factory):
-    date = datetime.date.today()
-
-    class Meta:
-        model = Meal
-
-
 class HouseholdFactory(factory.Factory):
 
     # name = fake.street_name()
@@ -36,6 +29,15 @@ class HouseholdFactory(factory.Factory):
 
     class Meta:
         model = Household
+
+
+class MealFactory(factory.Factory):
+    date = datetime.date.today()
+
+    household = factory.SubFactory(HouseholdFactory)
+
+    class Meta:
+        model = Meal
 
 
 class UserFactory(factory.Factory):
@@ -62,7 +64,7 @@ class RecipeFactory(factory.Factory):
 
     _directions = "step 1\nstep 2\nstep 3"
 
-    user = factory.SubFactory(UserFactory)
+    household = factory.SubFactory(HouseholdFactory)
 
     class Meta:
         model = Recipe

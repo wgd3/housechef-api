@@ -1,12 +1,13 @@
 """Click commands."""
 import os
-from faker import Faker
 
 import click
+from faker import Faker
 from flask.cli import with_appcontext
 from sqlalchemy.exc import IntegrityError
+
+from housechef.database.models import Household, Note, Recipe, User
 from housechef.extensions import db
-from housechef.database.models import Household, User, Tag, Recipe, Meal, Note
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.join(HERE, os.pardir)
@@ -107,4 +108,4 @@ def _generate_recipe_name(fake) -> str:
         "Risotto",
     ]
     locales = ["Mediterranean", "Italian", "Mexican", "Asian", "Spanish", "Indian"]
-    return f'{fake.random_element(elements=verbs) if fake.boolean() else ""} {fake.random_element(elements=locales)} {fake.random_element(elements=main_ingredients)}{ " with " + fake.random_element(elements=sides) if fake.boolean() else ""}'
+    return f'{fake.random_element(elements=verbs) if fake.boolean() else ""} {fake.random_element(elements=locales)} {fake.random_element(elements=main_ingredients)}{" with " + fake.random_element(elements=sides) if fake.boolean() else ""}'

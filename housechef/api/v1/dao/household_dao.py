@@ -1,8 +1,9 @@
-from flask import current_app
 import datetime as dt
-from housechef.database.models import Household, Meal
 
+from flask import current_app
 from sqlalchemy import and_
+
+from housechef.database.models import Meal
 
 
 class HouseholdDAO(object):

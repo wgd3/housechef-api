@@ -1,8 +1,9 @@
 import json
 import pytest
 from dotenv import load_dotenv
+from flask_jwt_extended import create_access_token, create_refresh_token
 
-from housechef.database.models import User
+from housechef.database.models import Household, Role, User, UserRole
 from housechef.app import create_app
 from housechef.extensions import db as _db
 from pytest_factoryboy import register
@@ -45,42 +46,57 @@ def db(app):
 
 
 @pytest.fixture
-def admin_user(db):
-    user = User.create(username="admin", email="admin@admin.com", password="admin")
+def test_user(db):
+    household = Household.create(name="test")
+    user = User.create(
+        username="testuser",
+        email="noreply@housechef.io",
+        password="none",
+        household_id=household.id,
+    )
+    return user
 
-    # db.session.add(user)
-    # db.session.commit()
+
+@pytest.fixture
+def test_user_headers(test_user):
+    access_token = create_access_token(identity=test_user)
+    return {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {access_token}",
+    }
+
+
+@pytest.fixture
+def admin_user(db):
+    household = Household.create(name="AdminHouse")
+    user = User.create(
+        username="admin",
+        email="admin@admin.com",
+        password="admin",
+        household_id=household.id,
+    )
+    admin_role = Role.create(name="Admin")
+    user_admin_role = UserRole(user_id=user.id, role_id=admin_role.id)
+    user.roles.append(user_admin_role)
+    user.save()
 
     return user
 
 
 @pytest.fixture
-def admin_headers(admin_user, client):
-    data = {"username": admin_user.username, "password": "admin"}
-    rep = client.post(
-        "/auth/login",
-        data=json.dumps(data),
-        headers={"content-type": "application/json"},
+def admin_headers(admin_user):
+    access_token = create_access_token(
+        identity=admin_user,
+        additional_claims={"roles": ["Admin"]},
     )
-
-    tokens = json.loads(rep.get_data(as_text=True))
     return {
-        "content-type": "application/json",
-        "authorization": "Bearer %s" % tokens["access_token"],
+        "Authorization": f"Bearer {access_token}",
     }
 
 
 @pytest.fixture
-def admin_refresh_headers(admin_user, client):
-    data = {"username": admin_user.username, "password": "admin"}
-    rep = client.post(
-        "/auth/login",
-        data=json.dumps(data),
-        headers={"content-type": "application/json"},
-    )
-
-    tokens = json.loads(rep.get_data(as_text=True))
+def admin_refresh_headers(admin_user):
+    refresh_token = create_refresh_token(identity=admin_user)
     return {
-        "content-type": "application/json",
-        "authorization": "Bearer %s" % tokens["refresh_token"],
+        "Authorization": f"Bearer {refresh_token}",
     }

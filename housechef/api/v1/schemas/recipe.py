@@ -1,12 +1,11 @@
-from marshmallow import fields, pre_dump, post_dump
+from marshmallow import fields
 
 from housechef.database.models import Recipe
-from housechef.extensions import ma, db
+from housechef.extensions import db, ma
 from .recipe_ingredient import RecipeIngredientSchema
 
 
 class RecipeSchema(ma.SQLAlchemyAutoSchema):
-
     id = ma.Int(dump_only=True)
 
     directions = fields.Raw()

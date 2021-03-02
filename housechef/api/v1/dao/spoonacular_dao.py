@@ -1,18 +1,17 @@
 from typing import List
 
 from flask import current_app
-from sqlalchemy import or_
 
-from housechef.extensions import spoon
 from housechef.database.models import (
-    Recipe,
-    Ingredient,
-    RecipeIngredient,
     Cuisine,
-    RecipeCuisine,
     DishType,
+    Ingredient,
+    Recipe,
+    RecipeCuisine,
     RecipeDishType,
+    RecipeIngredient,
 )
+from housechef.extensions import spoon
 from housechef.tasks import get_recipe_ingredient_nutrition
 
 

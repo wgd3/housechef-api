@@ -1,14 +1,5 @@
-from sqlalchemy.ext.hybrid import hybrid_property
-
 from housechef.extensions import db
-from ..mixins import (
-    Column,
-    LookupByNameMixin,
-    PkModel,
-    TimestampMixin,
-    reference_col,
-    relationship,
-)
+from ..mixins import Column, LookupByNameMixin, PkModel, relationship, TimestampMixin
 
 
 class Ingredient(PkModel, LookupByNameMixin, TimestampMixin):

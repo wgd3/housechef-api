@@ -1,13 +1,13 @@
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from housechef.extensions import db
 from ..mixins import (
     Column,
     LookupByNameMixin,
     PkModel,
-    TimestampMixin,
     reference_col,
     relationship,
+    TimestampMixin,
 )
 
 
@@ -52,9 +52,14 @@ class Recipe(PkModel, TimestampMixin, LookupByNameMixin):
     tags = relationship(
         "RecipeTag", back_populates="recipe", cascade="all, delete-orphan"
     )
-    meals = relationship(
-        "MealRecipe", back_populates="recipe", cascade="all, delete-orphan"
-    )
+
+    # meals = relationship(
+    #     "MealRecipe", back_populates="recipe", cascade="all, delete-orphan"
+    # )
+
+    # def __init__(self, name: str):
+    #     super().__init__()
+    #     self.name = name
 
     def __repr__(self):
         return f"<Recipe #{self.id} - {self.name}>"

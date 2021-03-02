@@ -1,9 +1,19 @@
 from flask import Blueprint, jsonify
+from flask_jwt_extended.exceptions import (
+    NoAuthorizationError,
+)
 from flask_restx import Api
+from jwt.exceptions import MissingRequiredClaimError
 from marshmallow import ValidationError
 
-from housechef.extensions import apispec
-from .namespaces import user_ns, recipe_ns, auth_ns, ingredient_ns, households_ns
+from .namespaces import (
+    auth_ns,
+    households_ns,
+    ingredient_ns,
+    recipe_ns,
+    user_ns,
+    cuisine_ns,
+)
 
 api_v1 = Blueprint("api_v1", __name__, url_prefix="/v1", subdomain="api")
 api = Api(
@@ -25,6 +35,7 @@ api.add_namespace(recipe_ns, path="/recipes")
 api.add_namespace(auth_ns, path="/auth")
 api.add_namespace(ingredient_ns, path="/ingredients")
 api.add_namespace(households_ns, path="/households")
+api.add_namespace(cuisine_ns, path="/cuisines")
 
 
 # @api_v1.before_app_first_request
@@ -42,3 +53,21 @@ def handle_marshmallow_error(e):
     correct JSON response with associated HTTP 400 Status (https://tools.ietf.org/html/rfc7231#section-6.5.1)
     """
     return jsonify(e.messages), 400
+
+
+@api_v1.errorhandler(NoAuthorizationError)
+def handle_missing_role(e):
+    """Return json error when a route requires a certain role, but the user is missing that role"""
+    return {
+        "message": "You do not have sufficient privileges to access this route!",
+        "data": None,
+    }, 401
+
+
+@api_v1.errorhandler(MissingRequiredClaimError)
+def handle_missing_role_claims(e):
+    """Return json error when a route requires a certain role, but the user's JWT is missing the roles dictionary"""
+    return {
+        "message": "You do not have sufficient privileges to access this route!",
+        "data": None,
+    }, 400

@@ -1,5 +1,5 @@
 from housechef.extensions import db
-from ..mixins import Column, LookupByNameMixin, PkModel, TimestampMixin, relationship
+from ..mixins import Column, LookupByNameMixin, PkModel, relationship, TimestampMixin
 
 
 class Cuisine(PkModel, LookupByNameMixin, TimestampMixin):

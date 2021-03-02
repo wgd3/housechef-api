@@ -1,12 +1,10 @@
 from typing import List
 
 from flask import current_app
-
 from sqlalchemy import and_
-import time
 
-from housechef.extensions import celery, spoon, db
-from housechef.database.models import Recipe, Ingredient, RecipeIngredient
+from housechef.database.models import Recipe, RecipeIngredient
+from housechef.extensions import celery, db, spoon
 
 
 @celery.task(bind=True)

@@ -1,5 +1,5 @@
 from housechef.database.models import RecipeIngredient
-from housechef.extensions import ma, db
+from housechef.extensions import db, ma
 
 
 class RecipeIngredientSchema(ma.SQLAlchemyAutoSchema):

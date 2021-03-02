@@ -1,4 +1,4 @@
-from flask_restx import fields, inputs, Model
+from flask_restx import fields, Model
 
 meal_model = Model(
     "Meal Model",
