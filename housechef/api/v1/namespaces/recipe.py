@@ -95,28 +95,28 @@ class RecipeListResource(Resource):
             ).paginate(per_page=args.get("per_page"), page=args.get("page"))
 
         return {
-            "_meta": {
-                "per_page": recipes.per_page,
-                "page": recipes.page,
-                "total_pages": recipes.pages,
-                "total_items": recipes.total,
-            },
-            "_links": {
-                "self": url_for("api_v1.list_recipes", **args),
-                "next": url_for(
-                    "api_v1.list_recipes", **{**args, **{"page": recipes.next_num}}
-                )
-                if recipes.has_next
-                else None,
-                "prev": url_for(
-                    "api_v1.list_recipes", **{**args, **{"page": recipes.prev_num}}
-                )
-                if recipes.has_prev
-                else None,
-            },
-            "message": f"returning {recipes.total} recipes",
-            "data": schema.dump(recipes.items, many=True),
-        }, 200
+                   "_meta": {
+                       "per_page": recipes.per_page,
+                       "page": recipes.page,
+                       "total_pages": recipes.pages,
+                       "total_items": recipes.total,
+                   },
+                   "_links": {
+                       "self": url_for("api_v1.list_recipes", **args),
+                       "next": url_for(
+                           "api_v1.list_recipes", **{**args, **{"page": recipes.next_num}}
+                       )
+                       if recipes.has_next
+                       else None,
+                       "prev": url_for(
+                           "api_v1.list_recipes", **{**args, **{"page": recipes.prev_num}}
+                       )
+                       if recipes.has_prev
+                       else None,
+                   },
+                   "message": f"returning {recipes.total} recipes",
+                   "data": schema.dump(recipes.items, many=True),
+               }, 200
 
     def post(self):
         pass

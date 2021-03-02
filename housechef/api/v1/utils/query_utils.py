@@ -3,7 +3,7 @@ from sqlalchemy import asc, desc, inspect
 
 
 def set_sort_order(
-    query: BaseQuery, obj_model: Model, sort_order="asc", sort_by="id", *args, **kwargs
+        query: BaseQuery, obj_model: Model, sort_order="asc", sort_by="id", *args, **kwargs
 ) -> BaseQuery:
     if sort_order is not None:
         sort = asc if sort_order == "asc" else desc
@@ -15,12 +15,12 @@ def set_sort_order(
 
 
 def set_search_filter(
-    query: BaseQuery,
-    obj_model: Model,
-    search_field: str = None,
-    search_value=None,
-    *args,
-    **kwargs,
+        query: BaseQuery,
+        obj_model: Model,
+        search_field: str = None,
+        search_value=None,
+        *args,
+        **kwargs,
 ) -> BaseQuery:
     """
     Utility for modifying a SQLAlchemy query by adding a filter. This uses the 'LIKE' modifier from SQL, and adds

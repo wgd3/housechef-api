@@ -1,8 +1,7 @@
+from flask_restx import fields, Model
+
 from housechef.database.models import Cuisine
 from housechef.extensions import db, ma
-
-from flask_restx import Model, fields
-
 from .restx_schema import RestXSchema
 
 

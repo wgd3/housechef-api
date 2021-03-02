@@ -9,7 +9,7 @@ from housechef.extensions import celery, db, spoon
 
 @celery.task(bind=True)
 def get_recipe_ingredient_nutrition(
-    self, recipe_ingredients: List[object], recipe_id: int
+        self, recipe_ingredients: List[object], recipe_id: int
 ):
     recipe: Recipe = Recipe.get_by_id(recipe_id)
     ingredient_strings = [i["ingredient_string"] for i in recipe_ingredients]

@@ -8,11 +8,11 @@ from marshmallow import ValidationError
 
 from .namespaces import (
     auth_ns,
+    cuisine_ns,
     households_ns,
     ingredient_ns,
     recipe_ns,
     user_ns,
-    cuisine_ns,
 )
 
 api_v1 = Blueprint("api_v1", __name__, url_prefix="/v1", subdomain="api")
