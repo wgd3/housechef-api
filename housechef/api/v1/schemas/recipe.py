@@ -2,6 +2,7 @@ from marshmallow import fields
 
 from housechef.database.models import Recipe
 from housechef.extensions import db, ma
+from .diet_type import DietTypeSchema
 from .recipe_ingredient import RecipeIngredientSchema
 
 
@@ -12,6 +13,8 @@ class RecipeSchema(ma.SQLAlchemyAutoSchema):
     _directions = fields.Raw(load_only=True)
 
     macros = fields.Dict(data_key="macros")
+
+    diets = fields.List(fields.Nested(DietTypeSchema, only=("name",)))
 
     ingredients = fields.List(
         fields.Nested(

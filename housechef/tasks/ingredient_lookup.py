@@ -9,7 +9,7 @@ from housechef.extensions import celery, db, spoon
 
 @celery.task(bind=True)
 def get_recipe_ingredient_nutrition(
-        self, recipe_ingredients: List[object], recipe_id: int
+    self, recipe_ingredients: List[object], recipe_id: int
 ):
     recipe: Recipe = Recipe.get_by_id(recipe_id)
     ingredient_strings = [i["ingredient_string"] for i in recipe_ingredients]
@@ -41,13 +41,14 @@ def get_recipe_ingredient_nutrition(
                 ),
                 None,
             )
+            # TODO better way to handle duplicates below?
             recipe_ingredient: RecipeIngredient = RecipeIngredient.query.filter(
                 and_(
                     RecipeIngredient.recipe_id == recipe_id,
                     RecipeIngredient.ingredient_id
                     == recipe_ingredient_details["ingredient_id"],
                 )
-            ).one_or_none()
+            ).first()
             if recipe_ingredient is not None:
                 current_app.logger.debug(
                     f"Updating nutrients for {recipe_ingredient.ingredient.name}"

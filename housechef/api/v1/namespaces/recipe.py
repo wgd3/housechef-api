@@ -53,6 +53,8 @@ class RecipeResource(Resource):
 class RecipeListResource(Resource):
     """Multi-recipe resource"""
 
+    # _diet_types = []
+
     list_param_parser = pagination_parser.copy()
     list_param_parser.add_argument(
         "directions",
@@ -66,6 +68,20 @@ class RecipeListResource(Resource):
         default=False,
         help="Include ingredients from each recipe",
     )
+
+    # list_param_parser.add_argument(
+    #     "diet", help="Limit recipes by diet", choices=_diet_types
+    # )
+
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     try:
+    #         self._diet_types = [dt.name for dt in DietType.query.all()]
+    #         self.list_param_parser.add_argument(
+    #             "diet", help="Limit recipes by diet", choices=self._diet_types
+    #         )
+    #     except Exception as e:
+    #         pass
 
     @jwt_required(optional=True)
     @ns.doc(security="apiKey", parser=list_param_parser)
@@ -95,28 +111,28 @@ class RecipeListResource(Resource):
             ).paginate(per_page=args.get("per_page"), page=args.get("page"))
 
         return {
-                   "_meta": {
-                       "per_page": recipes.per_page,
-                       "page": recipes.page,
-                       "total_pages": recipes.pages,
-                       "total_items": recipes.total,
-                   },
-                   "_links": {
-                       "self": url_for("api_v1.list_recipes", **args),
-                       "next": url_for(
-                           "api_v1.list_recipes", **{**args, **{"page": recipes.next_num}}
-                       )
-                       if recipes.has_next
-                       else None,
-                       "prev": url_for(
-                           "api_v1.list_recipes", **{**args, **{"page": recipes.prev_num}}
-                       )
-                       if recipes.has_prev
-                       else None,
-                   },
-                   "message": f"returning {recipes.total} recipes",
-                   "data": schema.dump(recipes.items, many=True),
-               }, 200
+            "_meta": {
+                "per_page": recipes.per_page,
+                "page": recipes.page,
+                "total_pages": recipes.pages,
+                "total_items": recipes.total,
+            },
+            "_links": {
+                "self": url_for("api_v1.list_recipes", **args),
+                "next": url_for(
+                    "api_v1.list_recipes", **{**args, **{"page": recipes.next_num}}
+                )
+                if recipes.has_next
+                else None,
+                "prev": url_for(
+                    "api_v1.list_recipes", **{**args, **{"page": recipes.prev_num}}
+                )
+                if recipes.has_prev
+                else None,
+            },
+            "message": f"returning {recipes.total} recipes",
+            "data": schema.dump(recipes.items, many=True),
+        }, 200
 
     def post(self):
         pass

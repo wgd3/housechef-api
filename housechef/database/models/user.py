@@ -74,6 +74,7 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
         if len(self.roles) == 0:
+            # TODO add default roles!
             pass
 
     def __repr__(self):

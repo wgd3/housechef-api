@@ -2,6 +2,7 @@
 
 Use env var to override
 """
+import datetime
 import os
 
 ENV = os.getenv("FLASK_ENV")
@@ -30,3 +31,7 @@ CELERY = {
     "broker_url": os.getenv("CELERY_BROKER_URL"),
     "result_backend": os.getenv("CELERY_RESULT_BACKEND_URL"),
 }
+
+JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(
+    seconds=int(os.getenv("JWT_ACCESS_TOKEN_EXPIRES", 900))
+)

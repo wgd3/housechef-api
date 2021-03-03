@@ -15,7 +15,7 @@ class Ingredient(PkModel, LookupByNameMixin, TimestampMixin):
     # id
     # time_created
     # time_updated
-    name = Column(db.String, unique=True, nullable=False)
+    name = Column(db.String, nullable=False)
     spoonacular_id = Column(db.Integer, unique=True)
 
     """Relationships"""

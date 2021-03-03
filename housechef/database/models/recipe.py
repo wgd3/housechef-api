@@ -1,3 +1,4 @@
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from housechef.extensions import db
@@ -45,6 +46,12 @@ class Recipe(PkModel, TimestampMixin, LookupByNameMixin):
     dish_types = relationship(
         "RecipeDishType", back_populates="recipe", cascade="all, delete-orphan"
     )
+    recipe_diet_types = relationship(
+        "RecipeDietType",
+        back_populates="recipe",
+        cascade="all, delete-orphan",
+    )
+    diets = association_proxy("recipe_diet_types", "diet_type")
     notes = relationship("Note", back_populates="recipe", cascade="all, delete-orphan")
     ingredients = relationship(
         "RecipeIngredient", back_populates="recipe", cascade="all, delete-orphan"
@@ -56,10 +63,6 @@ class Recipe(PkModel, TimestampMixin, LookupByNameMixin):
     # meals = relationship(
     #     "MealRecipe", back_populates="recipe", cascade="all, delete-orphan"
     # )
-
-    # def __init__(self, name: str):
-    #     super().__init__()
-    #     self.name = name
 
     def __repr__(self):
         return f"<Recipe #{self.id} - {self.name}>"

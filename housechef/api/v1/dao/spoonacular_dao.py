@@ -64,7 +64,11 @@ class SpoonacularDAO(object):
                     ingredient = Ingredient.query.filter(
                         Ingredient.spoonacular_id == i["id"],
                     ).one_or_none()
+                    current_app.logger.debug(f"Ingredient found: {ingredient}")
                     if ingredient is None:
+                        current_app.logger.debug(
+                            f"Ingredient {ingredient_name} (spoonacular id: {i['id']}) not found, adding to database..."
+                        )
                         # No matching ingredient in the database, create one before associating with recipe
                         ingredient = Ingredient.create(
                             name=ingredient_name, spoonacular_id=i["id"]
@@ -72,10 +76,10 @@ class SpoonacularDAO(object):
                         current_app.logger.debug(
                             f"Ingredient not found, added {ingredient.name} to database with id of {ingredient.id}"
                         )
-                    else:
-                        current_app.logger.debug(
-                            f"Found {ingredient.name} already in database!"
-                        )
+
+                    current_app.logger.debug(
+                        f"Associating ingredient {ingredient.name} (#{ingredient.id}) with recipe #{recipe.id}"
+                    )
 
                     # ingredient is now defined, whether just created or already in the db
                     recipe_ingredient = RecipeIngredient(
@@ -92,6 +96,7 @@ class SpoonacularDAO(object):
                         metric_unit_long=i["measures"]["metric"]["unitLong"],
                     )
                     recipe.ingredients.append(recipe_ingredient)
+                    recipe.save()
 
                     nutrition_ingredients.append(
                         dict(

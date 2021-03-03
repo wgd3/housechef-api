@@ -16,7 +16,12 @@ from ..models import (
     response_envelope,
 )
 from ..schemas import HouseholdSchema, MealSchema
-from ..utils import (generate_link_metadata, generate_query_metadata, role_required, set_sort_order)
+from ..utils import (
+    generate_link_metadata,
+    generate_query_metadata,
+    role_required,
+    set_sort_order,
+)
 
 ns = Namespace("Households", description="Household Operations")
 
@@ -59,11 +64,11 @@ class HouseholdList(Resource):
         )
 
         return {
-                   **generate_query_metadata(query),
-                   **generate_link_metadata(query, "api_v1.list_households", **args),
-                   "message": f"Returning {query.total} households",
-                   "data": schema.dump(query.items, many=True),
-               }, 200
+            **generate_query_metadata(query),
+            **generate_link_metadata(query, "api_v1.list_households", **args),
+            "message": f"Returning {query.total} households",
+            "data": schema.dump(query.items, many=True),
+        }, 200
 
 
 @ns.route("<int:household_id>", endpoint="get_household")
@@ -84,14 +89,14 @@ class HouseholdResource(Resource):
 
         if household_id != user.household_id:
             return {
-                       "message": "Requested household does not belong to the current user",
-                       "data": None,
-                   }, 403
+                "message": "Requested household does not belong to the current user",
+                "data": None,
+            }, 403
 
         return {
-                   "message": f"Returning household {household.name}",
-                   "data": schema.dump(household),
-               }, 200
+            "message": f"Returning household {household.name}",
+            "data": schema.dump(household),
+        }, 200
 
 
 @ns.route("/meals", endpoint="household_meals")
@@ -115,9 +120,9 @@ class HouseholdMealListResource(Resource):
         date = args.get("date") if args.get("date") is not None else dt.date.today()
         meals = HouseholdDAO.get_meals_for_day(user.household_id, date)
         return {
-                   "message": f"Found {len(meals)} meals planned for {date}",
-                   "data": schema.dump(meals, many=True),
-               }, 200
+            "message": f"Found {len(meals)} meals planned for {date}",
+            "data": schema.dump(meals, many=True),
+        }, 200
 
     @jwt_required()
     @ns.doc(security="apiKey")
@@ -156,6 +161,6 @@ class HouseholdMealListResource(Resource):
             return {"message": f"Could not create meal. {str(e)}", "data": None}, 400
 
         return {
-                   "message": f"Created meal for {meal.date}",
-                   "data": schema.dump(meal),
-               }, 201
+            "message": f"Created meal for {meal.date}",
+            "data": schema.dump(meal),
+        }, 201

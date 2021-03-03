@@ -5,13 +5,23 @@ class RecipeIngredient(db.Model):
     """Association object for recipe ingredients"""
 
     __tablename__ = "recipe_ingredients"
-    __table_args__ = (
-        db.UniqueConstraint(
-            "recipe_id", "ingredient_id", name="_recipe_ingredient_constraint"
-        ),
-    )
+
+    """
+    This constraint was causing issues on recipe import for recipes that had (for example) "lime" and "lime seasoning".
+    Both were assigned the same Spoonacular ID, which caused db issues while assigning recipe ingredients. Removing for
+    now.
+    """
+    # __table_args__ = (
+    #     db.UniqueConstraint(
+    #         "recipe_id",
+    #         "ingredient_id",
+    #         "original_string",
+    #         name="_recipe_ingredient_uix",
+    #     ),
+    # )
 
     """Primary Keys"""
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     recipe_id = db.Column(
         db.Integer, db.ForeignKey("recipes.id"), primary_key=True, nullable=False
     )

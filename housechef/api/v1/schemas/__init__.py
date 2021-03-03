@@ -1,4 +1,5 @@
 from .cuisine import CuisineSchema
+from .diet_type import DietTypeSchema
 from .household import HouseholdSchema
 from .ingredient import IngredientSchema
 from .meal import MealSchema
@@ -20,4 +21,5 @@ __all__ = [
     "NoteSchema",
     "HouseholdSchema",
     "MealSchema",
+    "DietTypeSchema",
 ]
