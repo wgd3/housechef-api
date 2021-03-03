@@ -1,4 +1,7 @@
+from flask import current_app
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import event, inspect
 
 from housechef.database.mixins import (
     LookupByNameMixin,
@@ -8,6 +11,7 @@ from housechef.database.mixins import (
     TimestampMixin,
 )
 from housechef.extensions import db, jwt, pwd_context
+from .role import Role
 
 
 class User(PkModel, TimestampMixin, LookupByNameMixin):
@@ -34,9 +38,11 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     tags = relationship("Tag", back_populates="user")
     household = relationship("Household", back_populates="users")
     household_id = reference_col("households")
-    roles = relationship(
+
+    user_roles = relationship(
         "UserRole", back_populates="user", cascade="all, delete-orphan"
     )
+    roles = association_proxy("user_roles", "role")
 
     @hybrid_property
     def password(self):
@@ -79,3 +85,14 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
 
     def __repr__(self):
         return "<User %s>" % self.username
+
+
+@event.listens_for(User, "after_insert")
+def receive_after_insert(mapper, connection, target):
+    current_app.logger.debug(f"New user created, associating all default roles")
+    roles = Role.query.filter(Role.default == True).all()
+    insp = inspect(target)
+    commit = False if insp.pending else True
+    for r in roles:
+        target.roles.append(r)
+    target.save(commit=commit)

@@ -38,6 +38,8 @@ def db(app):
 
     with app.app_context():
         _db.create_all()
+        Role.create(name="User", default=True)
+        Role.create(name="Admin", default=False)
 
     yield _db
 
@@ -54,12 +56,18 @@ def test_user(db):
         password="none",
         household_id=household.id,
     )
+    # user_role = Role.create(name="User")
+    # user.roles.append(user_role)
+    # user.save()
     return user
 
 
 @pytest.fixture
 def test_user_headers(test_user):
-    access_token = create_access_token(identity=test_user)
+    access_token = create_access_token(
+        identity=test_user,
+        additional_claims={"roles": [r.name for r in test_user.roles]},
+    )
     return {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {access_token}",
@@ -75,10 +83,10 @@ def admin_user(db):
         password="admin",
         household_id=household.id,
     )
-    admin_role = Role.create(name="Admin")
-    user_admin_role = UserRole(user_id=user.id, role_id=admin_role.id)
-    user.roles.append(user_admin_role)
-    user.save()
+    # admin_role = Role.create(name="Admin")
+    # user_admin_role = UserRole(user_id=user.id, role_id=admin_role.id)
+    # user.roles.append(admin_role)
+    # user.save()
 
     return user
 

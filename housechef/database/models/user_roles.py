@@ -8,16 +8,24 @@ class UserRole(db.Model):
     )
 
     """Primary Keys"""
+    # Parent
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id"), primary_key=True, nullable=False
     )
+    # Child
     role_id = db.Column(
         db.Integer, db.ForeignKey("roles.id"), primary_key=True, nullable=False
     )
 
     """Relationships"""
-    user = db.relationship("User", back_populates="roles")
-    role = db.relationship("Role", back_populates="users")
+    # Parent
+    user = db.relationship("User", back_populates="user_roles")
+    # Child
+    role = db.relationship("Role", back_populates="users", lazy="joined")
+
+    def __init__(self, role=None, user=None):
+        self.role = role
+        self.user = user
 
     def __repr__(self):
         return f"<UserRole - {self.user.username} has role {self.role.name}>"

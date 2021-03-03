@@ -61,7 +61,7 @@ class TestCuisineApi:
         resp = client.delete(
             url_for("api_v1.get_cuisine", cuisine_id=1), headers=test_user_headers
         )
-        assert resp.status_code == 400
+        assert resp.status_code == 401
 
 
 @pytest.mark.usefixtures("db", "client")

@@ -1,86 +1,233 @@
+import pytest
 from flask import url_for
-from flask.testing import FlaskClient
-from flask_jwt_extended import create_access_token
 
 from housechef.extensions import pwd_context
 from housechef.database.models import User, Household
 
 
-def test_get_user(app, client, db, test_user, test_user_headers):
+@pytest.mark.usefixtures("db", "client")
+class TestUserGET:
+    def test_get_user(self, app, client, db, test_user, test_user_headers):
 
-    # test get_user
-    user_url = url_for("api_v1.get_user", user_id=test_user.id)
-    rep = client.get(user_url, headers=test_user_headers)
-    assert rep.status_code == 200
+        # test get_user
+        user_url = url_for("api_v1.get_user", user_id=test_user.id)
+        rep = client.get(user_url, headers=test_user_headers)
+        assert rep.status_code == 200
 
-    data = rep.get_json()["user"]
-    assert data["username"] == test_user.username
-    assert data["email"] == test_user.email
-    assert data["active"] == test_user.active
+        data = rep.get_json()["data"]
+        assert data["username"] == test_user.username
+        assert data["email"] == test_user.email
+        assert data["active"] == test_user.active
 
+    def test_get_user_as_non_admin_user(
+        self, app, client, db, test_user, test_user_headers, user_factory
+    ):
 
-def test_put_user(client, db, test_user, test_user_headers):
+        # create fake, non-test user
+        user = user_factory.create()
+        db.session.add(user)
+        db.session.commit()
 
-    data = {"username": "updated", "password": "new_password"}
+        # test get_user
+        user_url = url_for("api_v1.get_user", user_id=user.id)
+        rep = client.get(user_url, headers=test_user_headers)
+        assert rep.status_code == 403
 
-    user_url = url_for("api_v1.get_user", user_id=test_user.id)
-    # test update user
-    rep = client.put(user_url, json=data, headers=test_user_headers)
-    assert rep.status_code == 200
+    def test_get_user_as_admin(self, app, client, db, test_user, admin_headers):
 
-    data = rep.get_json()["user"]
-    assert data["username"] == "updated"
-    assert data["email"] == test_user.email
-    assert data["active"] == test_user.active
+        # test get_user
+        user_url = url_for("api_v1.get_user", user_id=test_user.id)
+        rep = client.get(user_url, headers=admin_headers)
+        assert rep.status_code == 200
 
-    db.session.refresh(test_user)
-    assert pwd_context.verify("new_password", test_user.password)
+        data = rep.get_json()["data"]
+        assert data["username"] == test_user.username
+        assert data["email"] == test_user.email
+        assert data["active"] == test_user.active
 
+    def test_get_missing_user_as_user(self, client, test_user_headers):
+        """If a non-admin user requests another user, they'll receive a 403"""
+        # test get_user
+        user_url = url_for("api_v1.get_user", user_id=10000)
+        rep = client.get(user_url, headers=test_user_headers)
+        assert rep.status_code == 403
 
-def test_delete_user(client, db, test_user, test_user_headers):
-    user_url = url_for("api_v1.get_user", user_id=test_user.id)
-    rep = client.delete(user_url, headers=test_user_headers)
-    assert rep.status_code == 200
-    assert db.session.query(User).filter_by(id=test_user.id).first() is None
-
-
-def test_create_user(client, db, test_user, test_user_headers):
-    # test bad data
-    users_url = url_for("api_v1.list_users")
-    # rep = client.post(users_url, json=data)
-    # assert rep.status_code == 400
-    household = Household.create(name="new_user_household")
-    user_data = {
-        "username": "created",
-        "password": "admin",
-        "email": "create@mail.com",
-        "household_id": household.id,
-    }
-
-    rep = client.post(
-        users_url, json=user_data, headers={"Content-Type": "application/json"}
-    )
-    assert rep.status_code == 201
-
-    data = rep.get_json()
-    user = User.get_by_id(data["user"]["id"])
-
-    assert user.username == "created"
-    assert user.email == "create@mail.com"
+    def test_get_missing_user_as_admin(self, client, admin_headers):
+        """If an admin user requests another user, they'll receive a 404"""
+        # test get_user
+        user_url = url_for("api_v1.get_user", user_id=10000)
+        rep = client.get(user_url, headers=admin_headers)
+        assert rep.status_code == 404
 
 
-#
-#
-# def test_get_all_user(client, db, user_factory, admin_headers):
-#     users_url = url_for("api_v1.list_users")
-#     users = user_factory.create_batch(30)
-#
-#     db.session.add_all(users)
-#     db.session.commit()
-#
-#     rep = client.get(users_url, headers=admin_headers)
-#     assert rep.status_code == 200
-#
-#     results = rep.get_json()
-#     for user in users:
-#         assert any(u["id"] == user.id for u in results["results"])
+@pytest.mark.usefixtures("db", "client")
+class TestUserPUT:
+    def test_put_user(self, client, db, test_user, test_user_headers):
+
+        data = {"username": "updated", "password": "new_password"}
+
+        user_url = url_for("api_v1.get_user", user_id=test_user.id)
+        # test update user
+        rep = client.put(user_url, json=data, headers=test_user_headers)
+        assert rep.status_code == 200
+
+        data = rep.get_json()["data"]
+        assert data["username"] == "updated"
+        assert data["email"] == test_user.email
+        assert data["active"] == test_user.active
+
+        db.session.refresh(test_user)
+        assert pwd_context.verify("new_password", test_user.password)
+
+    def test_put_wrong_user_as_user(self, client, db, user_factory, test_user_headers):
+
+        user = user_factory.create()
+        db.session.add(user)
+        db.session.commit()
+
+        data = {"username": "updated", "password": "new_password"}
+
+        user_url = url_for("api_v1.get_user", user_id=user.id)
+        # test update user
+        rep = client.put(user_url, json=data, headers=test_user_headers)
+        assert rep.status_code == 403
+
+    def test_put_wrong_user_as_admin(self, client, db, user_factory, admin_headers):
+
+        user = user_factory.create()
+        db.session.add(user)
+        db.session.commit()
+
+        data = {"username": "updated", "password": "new_password"}
+
+        user_url = url_for("api_v1.get_user", user_id=user.id)
+        # test update user
+        rep = client.put(user_url, json=data, headers=admin_headers)
+        assert rep.status_code == 200
+
+        data = rep.get_json()["data"]
+        assert data["username"] == "updated"
+        assert data["email"] == user.email
+        assert data["active"] == user.active
+
+    def test_put_user_invalid_payload(self, client, db, test_user, test_user_headers):
+
+        data = {"username": "updated", "password": "new_password", "time_created": None}
+
+        user_url = url_for("api_v1.get_user", user_id=test_user.id)
+        # test update user
+        rep = client.put(user_url, json=data, headers=test_user_headers)
+        assert rep.status_code == 400
+
+
+@pytest.mark.usefixtures("db", "client")
+class TestUserDELETE:
+    def test_delete_user(self, client, db, test_user, test_user_headers):
+        user_url = url_for("api_v1.get_user", user_id=test_user.id)
+        rep = client.delete(user_url, headers=test_user_headers)
+        assert rep.status_code == 200
+        assert db.session.query(User).filter_by(id=test_user.id).first() is None
+
+    def test_delete_user_as_different_user(
+        self, client, db, user_factory, test_user, test_user_headers
+    ):
+        other_user = user_factory.create()
+        db.session.add(other_user)
+        db.session.commit()
+
+        user_url = url_for("api_v1.get_user", user_id=other_user.id)
+        rep = client.delete(user_url, headers=test_user_headers)
+        assert rep.status_code == 403
+
+    def test_delete_user_as_admin(self, client, db, test_user, admin_headers):
+        user_url = url_for("api_v1.get_user", user_id=test_user.id)
+        rep = client.delete(user_url, headers=admin_headers)
+        assert rep.status_code == 200
+        assert db.session.query(User).filter_by(id=test_user.id).first() is None
+
+    def test_delete_missing_user_as_user(
+        self, client, db, test_user, test_user_headers
+    ):
+
+        user_url = url_for("api_v1.get_user", user_id=1000)
+        rep = client.delete(user_url, headers=test_user_headers)
+        assert rep.status_code == 403
+
+    def test_delete_missing_user_as_admin(self, client, db, test_user, admin_headers):
+
+        user_url = url_for("api_v1.get_user", user_id=1000)
+        rep = client.delete(user_url, headers=admin_headers)
+        assert rep.status_code == 404
+
+
+@pytest.mark.usefixtures("db", "client")
+class TestUserListPOST:
+    def test_create_user(self, client, db, test_user):
+        users_url = url_for("api_v1.list_users")
+        user_data = {
+            "username": "created",
+            "password": "admin",
+            "email": "create@mail.com",
+            "household_id": test_user.household_id,
+        }
+
+        rep = client.post(
+            users_url, json=user_data, headers={"Content-Type": "application/json"}
+        )
+        assert rep.status_code == 201
+
+        data = rep.get_json()["data"]
+        user = User.get_by_id(data["id"])
+
+        assert user.username == "created"
+        assert user.email == "create@mail.com"
+
+    def test_create_user_with_bad_payload(self, client, db, test_user):
+        users_url = url_for("api_v1.list_users")
+        user_data = {
+            "time_created": None,
+            "username": "created",
+            "password": "admin",
+            "email": "create@mail.com",
+            "household_id": test_user.household_id,
+        }
+
+        rep = client.post(
+            users_url, json=user_data, headers={"Content-Type": "application/json"}
+        )
+        assert rep.status_code == 400
+
+        # data = rep.get_json()["data"]
+        # user = User.get_by_id(data["id"])
+        #
+        # assert user.username == "created"
+        # assert user.email == "create@mail.com"
+
+
+@pytest.mark.usefixtures("db", "client")
+class TestUserListGET:
+    def test_get_all_users(self, client, db, user_factory, admin_headers):
+        users_url = url_for("api_v1.list_users")
+        users = user_factory.create_batch(10)
+
+        db.session.add_all(users)
+        db.session.commit()
+
+        rep = client.get(users_url, headers=admin_headers)
+        assert rep.status_code == 200
+
+        results = rep.get_json()["data"]
+        for user in users:
+            assert any(u["id"] == user.id for u in results)
+
+    def test_get_all_users_without_admin_role(
+        self, client, db, user_factory, test_user_headers
+    ):
+        users_url = url_for("api_v1.list_users")
+        users = user_factory.create_batch(10)
+
+        db.session.add_all(users)
+        db.session.commit()
+
+        rep = client.get(users_url, headers=test_user_headers)
+        assert rep.status_code == 401
