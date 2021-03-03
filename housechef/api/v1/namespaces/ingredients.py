@@ -65,17 +65,17 @@ class IngredientListResource(Resource):
                 search_value=args.get("filter"),
             ).all()
             return {
-                       "_meta": {},
-                       "_links": {},
-                       "message": f"Found {len(ingredients)} ingredient{'' if len(ingredients) == 1 else 's'} matching '{args.get('filter')}'",
-                       "data": schema.dump(ingredients, many=True),
-                   }, 200
+                "_meta": {},
+                "_links": {},
+                "message": f"Found {len(ingredients)} ingredient{'' if len(ingredients) == 1 else 's'} matching '{args.get('filter')}'",
+                "data": schema.dump(ingredients, many=True),
+            }, 200
 
         ingredients = ingredients.paginate(args.get("page"), args.get("per_page"))
 
         return {
-                   **generate_query_metadata(ingredients),
-                   **generate_link_metadata(ingredients, "api_v1.list_ingredients", **args),
-                   "message": f"Returning {ingredients.total} ingredients",
-                   "data": schema.dump(ingredients.items, many=True),
-               }, 200
+            **generate_query_metadata(ingredients),
+            **generate_link_metadata(ingredients, "api_v1.list_ingredients", **args),
+            "message": f"Returning {ingredients.total} ingredients",
+            "data": schema.dump(ingredients.items, many=True),
+        }, 200

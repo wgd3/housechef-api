@@ -41,13 +41,13 @@ class RestfulNamespaceGenerator(object):
         return ns
 
     def create_entity_resource(
-            self,
-            ns: Namespace,
-            obj_model,
-            obj_schema,
-            route: str,
-            endpoint: str,
-            requires_jwt: bool,
+        self,
+        ns: Namespace,
+        obj_model,
+        obj_schema,
+        route: str,
+        endpoint: str,
+        requires_jwt: bool,
     ) -> Resource:
 
         gem = self._ns.models.get("get_entity_model")

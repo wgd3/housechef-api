@@ -51,9 +51,9 @@ class LogInResource(Resource):
         refresh_token = create_refresh_token(identity=user)
 
         return {
-                   "access_token": access_token,
-                   "refresh_token": refresh_token,
-               }, HTTPStatus.OK
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+        }, HTTPStatus.OK
 
 
 @ns.route("/refresh", endpoint="auth_refresh")

@@ -38,9 +38,9 @@ class CuisineListResource(Resource):
         schema = CuisineSchema()
         query = Cuisine.query.all()
         return {
-                   "data": schema.dump(query, many=True),
-                   "message": f"Returning {len(query)} cuisines",
-               }, 200
+            "data": schema.dump(query, many=True),
+            "message": f"Returning {len(query)} cuisines",
+        }, 200
 
     @jwt_required()
     @ns.doc(security="apiKey")
@@ -53,9 +53,9 @@ class CuisineListResource(Resource):
         db.session.commit()
 
         return {
-                   "data": schema.dump(cuisine),
-                   "message": f"Created {cuisine.name}",
-               }, 201
+            "data": schema.dump(cuisine),
+            "message": f"Created {cuisine.name}",
+        }, 201
 
 
 @ns.route("/<int:cuisine_id>", endpoint="get_cuisine")
@@ -65,9 +65,9 @@ class CuisineResource(Resource):
         schema = CuisineSchema()
         cuisine = Cuisine.query.get_or_404(cuisine_id)
         return {
-                   "data": schema.dump(cuisine),
-                   "message": f"Returning cuisine '{cuisine.name}'",
-               }, 200
+            "data": schema.dump(cuisine),
+            "message": f"Returning cuisine '{cuisine.name}'",
+        }, 200
 
     @jwt_required()
     @role_required("Admin")

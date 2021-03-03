@@ -4,6 +4,7 @@ from flask import current_app
 
 from housechef.database.models import (
     Cuisine,
+    DietType,
     DishType,
     Ingredient,
     Recipe,
@@ -55,12 +56,6 @@ class SpoonacularDAO(object):
                     current_app.logger.debug(
                         f"Looking to see if {ingredient_name} is already in the database"
                     )
-                    # ingredient = Ingredient.query.filter(
-                    #     or_(
-                    #         Ingredient.name == ingredient_name,
-                    #         Ingredient.spoonacular_id == i["id"],
-                    #     )
-                    # ).one_or_none()
                     ingredient = Ingredient.query.filter(
                         Ingredient.spoonacular_id == i["id"],
                     ).one_or_none()
@@ -171,6 +166,27 @@ class SpoonacularDAO(object):
             except Exception as e:
                 current_app.logger.error(
                     f"Error occurred while associating dish types: {str(e)}"
+                )
+
+            # attempt to add diet types
+            try:
+                current_app.logger.debug(f"Associating diets with recipe..")
+                diet_types: List[str] = recipe_data["diets"]
+                if len(diet_types) > 0:
+                    for dt in diet_types:
+                        diet_type = DietType.query.filter(
+                            DietType.name == dt
+                        ).one_or_none()
+                        if diet_type is None:
+                            diet_type = DietType.create(name=dt)
+                            current_app.logger.debug(
+                                f"Created new diet type '{diet_type.name}'"
+                            )
+                        recipe.diets.append(diet_type)
+                    recipe.save()
+            except Exception as e:
+                current_app.logger.error(
+                    f"Error occurred while associating diet types: {str(e)}"
                 )
 
         else:

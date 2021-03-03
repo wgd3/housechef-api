@@ -131,8 +131,8 @@ class SerializableMixin(object):
                     cls = self.__mapper__.relationships[rel].argument()
                     for item in kwargs[rel]:
                         if (
-                                "id" in item
-                                and query.filter_by(id=item["id"]).limit(1).count() == 1
+                            "id" in item
+                            and query.filter_by(id=item["id"]).limit(1).count() == 1
                         ):
                             obj = cls.query.filter_by(id=item["id"]).first()
                             col_changes = obj.set_columns(**item)
@@ -317,10 +317,10 @@ class PkModel(Model):
     def get_by_id(cls, record_id):
         """Get record by ID."""
         if any(
-                (
-                        isinstance(record_id, (str, bytes)) and record_id.isdigit(),
-                        isinstance(record_id, (int, float)),
-                )
+            (
+                isinstance(record_id, (str, bytes)) and record_id.isdigit(),
+                isinstance(record_id, (int, float)),
+            )
         ):
             return cls.query.get(int(record_id))
         return None
@@ -335,11 +335,11 @@ class LookupByNameMixin(object):
 
 
 def reference_col(
-        tablename: str,
-        nullable=False,
-        pk_name="id",
-        foreign_key_kwargs=None,
-        column_kwargs=None,
+    tablename: str,
+    nullable=False,
+    pk_name="id",
+    foreign_key_kwargs=None,
+    column_kwargs=None,
 ):
     """Column that adds primary key foreign key reference.
     Usage: ::
