@@ -6,6 +6,7 @@ from housechef.extensions import db
 from ..models import links_envelope, meta_envelope, response_envelope
 from ..schemas import CuisineSchema
 from ..utils import role_required
+from ..dao import SqlalchemyDAO
 
 ns = Namespace("Cuisines", description="Cuisine Operations")
 
@@ -18,10 +19,10 @@ cuisine_model = ns.model(
 )
 
 get_cuisine_model = ns.clone(
-    "get_ingredient_model", response_env, {"data": fields.Nested(cuisine_model)}
+    "get_cuisine_model", response_env, {"data": fields.Nested(cuisine_model)}
 )
 get_cuisine_list_model = ns.inherit(
-    "get_ingredient_list_model",
+    "get_cuisine_list_model",
     response_env,
     {
         "data": fields.List(fields.Nested(cuisine_model)),
@@ -62,12 +63,10 @@ class CuisineListResource(Resource):
 class CuisineResource(Resource):
     @ns.marshal_with(get_cuisine_model)
     def get(self, cuisine_id: int):
-        schema = CuisineSchema()
-        cuisine = Cuisine.query.get_or_404(cuisine_id)
-        return {
-            "data": schema.dump(cuisine),
-            "message": f"Returning cuisine '{cuisine.name}'",
-        }, 200
+        ret_json, ret_code = SqlalchemyDAO.get_entity_by_id(
+            cuisine_id, Cuisine, CuisineSchema
+        )
+        return ret_json, ret_code
 
     @jwt_required()
     @role_required("Admin")
@@ -81,12 +80,11 @@ class CuisineResource(Resource):
         return {
             "data": schema.dump(cuisine),
             "message": f"Updated cuisine '{cuisine.name}!'",
-        }
+        }, 200
 
     @jwt_required()
     @role_required("Admin")
     def delete(self, cuisine_id):
         """Delete cuisines - requires Admin role"""
-        cuisine = Cuisine.query.get_or_404(cuisine_id)
-        cuisine.delete()
-        return {"data": None, "messge": "Deleted cuisine"}, 200
+        ret_json, ret_code = SqlalchemyDAO.delete_entity(cuisine_id, Cuisine)
+        return ret_json, ret_code

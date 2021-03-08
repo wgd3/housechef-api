@@ -101,5 +101,8 @@ logs
 db
 *.db
 
+# json files with database dumps
+housechef/util/populate/**/*.json
+
 # PyCharm
 .idea

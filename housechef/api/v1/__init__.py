@@ -6,6 +6,14 @@ from flask_restx import Api
 from jwt.exceptions import MissingRequiredClaimError
 from marshmallow import ValidationError
 
+from housechef.exceptions import (
+    EntityNotFoundError,
+    EntityValidationError,
+    EntityAlreadyExistsError,
+    HousechefDatabaseOpsError,
+    HousechefSerializationError,
+)
+
 from .namespaces import (
     auth_ns,
     cuisine_ns,
@@ -13,6 +21,7 @@ from .namespaces import (
     ingredient_ns,
     recipe_ns,
     user_ns,
+    diet_type_ns,
 )
 
 api_v1 = Blueprint("api_v1", __name__, url_prefix="/v1", subdomain="api")
@@ -36,6 +45,7 @@ api.add_namespace(auth_ns, path="/auth")
 api.add_namespace(ingredient_ns, path="/ingredients")
 api.add_namespace(households_ns, path="/households")
 api.add_namespace(cuisine_ns, path="/cuisines")
+api.add_namespace(diet_type_ns, path="/diet_types")
 
 
 # @api_v1.before_app_first_request
@@ -71,3 +81,23 @@ def handle_missing_role_claims(e):
         "message": "You do not have sufficient privileges to access this route!",
         "data": None,
     }, 400
+
+
+@api_v1.errorhandler(EntityValidationError)
+def handle_invalid_data(e: EntityValidationError):
+    return {"data": e.data, "message": e.message}, 400
+
+
+@api_v1.errorhandler(EntityNotFoundError)
+def handle_missing_entity_error(e: EntityNotFoundError):
+    return {"data": e.data, "message": e.message}, 404
+
+
+@api_v1.errorhandler(HousechefDatabaseOpsError)
+def handle_missing_entity_error(e: HousechefDatabaseOpsError):
+    return {"data": e.data, "message": e.message}, 500
+
+
+@api_v1.errorhandler(HousechefSerializationError)
+def handle_serialization_error(e: HousechefSerializationError):
+    return {"data": e.data, "message": e.message}, 500

@@ -40,19 +40,26 @@ class Recipe(PkModel, TimestampMixin, LookupByNameMixin):
     household = relationship("Household", back_populates="recipes")
 
     """One (recipe) to Many Relationships"""
-    cuisines = relationship(
-        "RecipeCuisine", back_populates="recipe", cascade="all, delete-orphan"
-    )
-    dish_types = relationship(
-        "RecipeDishType", back_populates="recipe", cascade="all, delete-orphan"
-    )
+    notes = relationship("Note", back_populates="recipe", cascade="all, delete-orphan")
+
+    """Relationships with association proxies"""
     recipe_diet_types = relationship(
         "RecipeDietType",
         back_populates="recipe",
         cascade="all, delete-orphan",
     )
     diets = association_proxy("recipe_diet_types", "diet_type")
-    notes = relationship("Note", back_populates="recipe", cascade="all, delete-orphan")
+
+    recipe_cuisines = relationship(
+        "RecipeCuisine", back_populates="recipe", cascade="all, delete-orphan"
+    )
+    cuisines = association_proxy("recipe_cuisines", "cuisine")
+
+    recipe_dish_types = relationship(
+        "RecipeDishType", back_populates="recipe", cascade="all, delete-orphan"
+    )
+    dish_types = association_proxy("recipe_dish_types", "dish_type")
+
     ingredients = relationship(
         "RecipeIngredient", back_populates="recipe", cascade="all, delete-orphan"
     )

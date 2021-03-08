@@ -1,11 +1,13 @@
 from functools import wraps
 
-from flask_jwt_extended import get_jwt
+from flask_jwt_extended import get_current_user, get_jwt
 from flask_jwt_extended.exceptions import (
     NoAuthorizationError,
 )
 from flask_jwt_extended.view_decorators import verify_jwt_in_request
 from jwt.exceptions import MissingRequiredClaimError
+
+from housechef.exceptions import HousechefException
 
 
 def role_required(role_name: str, optional: bool = False):
@@ -28,3 +30,21 @@ def role_required(role_name: str, optional: bool = False):
         return wrapper
 
     return role_decorator
+
+
+def requires_household_match(household_id: int, model, optional=False):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if not hasattr(model, "household_id"):
+                raise HousechefException(
+                    message="Error while matching resource with household ID"
+                )
+            if not household_id == model.household_id and not optional:
+                raise NoAuthorizationError
+
+            return fn(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

@@ -7,7 +7,7 @@ from flask_restx import fields, inputs, Namespace, reqparse, Resource
 from marshmallow.utils import from_iso_date
 
 from housechef.database.models import Household, Meal, Recipe
-from ..dao import HouseholdDAO
+from ..dao import HouseholdDAO, SqlalchemyDAO
 from ..models import (
     links_envelope,
     meal_model,
@@ -83,9 +83,6 @@ class HouseholdResource(Resource):
     @ns.doc(security="apiKey")
     def get(self, household_id: int):
         user = get_current_user()
-        schema = HouseholdSchema()
-        if household_id == user.household_id:
-            household = Household.get_by_id(user.household_id)
 
         if household_id != user.household_id:
             return {
@@ -93,10 +90,10 @@ class HouseholdResource(Resource):
                 "data": None,
             }, 403
 
-        return {
-            "message": f"Returning household {household.name}",
-            "data": schema.dump(household),
-        }, 200
+        ret_json, ret_code = SqlalchemyDAO.get_entity_by_id(
+            household_id, Household, HouseholdSchema
+        )
+        return ret_json, ret_code
 
 
 @ns.route("/meals", endpoint="household_meals")
@@ -112,7 +109,8 @@ class HouseholdMealListResource(Resource):
     )
 
     @jwt_required()
-    @ns.doc(security="apiKey", parser=date_parser)
+    @ns.doc(security="apiKey")
+    @ns.expect(date_parser)
     def get(self):
         args = self.date_parser.parse_args()
         schema = MealSchema(many=True)

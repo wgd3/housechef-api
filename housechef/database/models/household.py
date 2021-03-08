@@ -14,7 +14,9 @@ class Household(PkModel, TimestampMixin):
     name = Column(db.String(128), nullable=False, unique=True)
 
     """Relationships"""
-    users = relationship("User", back_populates="household")
+    users = relationship(
+        "User", back_populates="household", cascade="all, delete-orphan"
+    )
     recipes = relationship(
         "Recipe", back_populates="household", cascade="all, delete-orphan"
     )

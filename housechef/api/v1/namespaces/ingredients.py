@@ -50,7 +50,7 @@ class IngredientListResource(Resource):
         trim=True,
     )
 
-    @ns.doc(parser=param_parser)
+    @ns.expect(param_parser)
     def get(self):
         args = self.param_parser.parse_args()
 

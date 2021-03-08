@@ -12,16 +12,25 @@ class RecipeCuisine(db.Model):
     )
 
     """Columns"""
+    # Parent
     recipe_id = db.Column(
         db.Integer, db.ForeignKey("recipes.id"), primary_key=True, nullable=False
     )
+    # Child
     cuisine_id = db.Column(
         db.Integer, db.ForeignKey("cuisines.id"), primary_key=True, nullable=False
     )
 
     """Relationships"""
-    recipe = db.relationship("Recipe", back_populates="cuisines")
-    cuisine = db.relationship("Cuisine", back_populates="recipes")
+    # Parent
+    recipe = db.relationship("Recipe", back_populates="recipe_cuisines")
+    # Child
+    cuisine = db.relationship("Cuisine", back_populates="recipes", lazy="joined")
+
+    def __init__(self, cuisine=None, recipe=None):
+        """Called when appending Cuisine objects to Recipe objects, child used as first arg"""
+        self.cuisine = cuisine
+        self.recipe = recipe
 
     def __repr__(self):
         return f"<RecipeCuisine - {self.cuisine.name}/{self.recipe.name}>"

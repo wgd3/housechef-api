@@ -1,5 +1,4 @@
 from flask import url_for
-from flask.testing import FlaskClient as TestClient
 
 from flask_jwt_extended import create_refresh_token
 
@@ -13,14 +12,14 @@ def test_get_tokens(client, db, user_factory):
 
     resp = client.post(
         url_for("api_v1.auth_login"),
-        json=dict(username=user.username, password="mypwd"),
+        json={"username": user.username, "password": "mypwd"},
     )
     assert resp.status_code == 200
     assert "access_token" in resp.json
     assert "refresh_token" in resp.json
 
 
-def test_get_refresh_token(client: TestClient, db):
+def test_get_refresh_token(client, db):
     household = Household.create(name="house")
     user = User.create(
         username="testuser",

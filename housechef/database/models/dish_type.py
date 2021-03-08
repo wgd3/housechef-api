@@ -14,7 +14,9 @@ class DishType(PkModel, TimestampMixin, LookupByNameMixin):
     name = Column(db.String, unique=True, nullable=False)
 
     """Relationships"""
-    recipes = relationship("RecipeDishType", back_populates="dish_type")
+    recipes = relationship(
+        "RecipeDishType", back_populates="dish_type", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<DishType {self.name}>"

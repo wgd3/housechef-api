@@ -1,7 +1,10 @@
+from datetime import date
+
 from flask import current_app
+from flask_jwt_extended import create_access_token, create_refresh_token
+from sqlalchemy import event, inspect
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import event, inspect
 
 from housechef.database.mixins import (
     LookupByNameMixin,
@@ -86,13 +89,43 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     def __repr__(self):
         return "<User %s>" % self.username
 
+    def get_access_token(self):
+        jwt = create_access_token(
+            identity=self, additional_claims=self.additional_claims
+        )
+        return jwt
+
+    def get_refresh_token(self):
+        jwt = create_refresh_token(
+            identity=self, additional_claims=self.additional_claims
+        )
+        return jwt
+
+    @property
+    def additional_claims(self):
+        return {"roles": [r.name for r in self.roles]}
+
+    @property
+    def age(self) -> int:
+        if self.birthday is None:
+            return None
+        today = date.today()
+        age = (
+            today.year
+            - self.birthday.year
+            - ((today.month, today.day) < (self.birthday.month, self.birthday.day))
+        )
+        return age
+
 
 @event.listens_for(User, "after_insert")
 def receive_after_insert(mapper, connection, target):
-    current_app.logger.debug(f"New user created, associating all default roles")
-    roles = Role.query.filter(Role.default == True).all()
-    insp = inspect(target)
-    commit = False if insp.pending else True
-    for r in roles:
-        target.roles.append(r)
-    target.save(commit=commit)
+    @event.listens_for(db.session, "after_flush", once=True)
+    def receive_after_flush(session, context):
+        current_app.logger.debug(f"New user created, associating all default roles")
+        roles = Role.query.filter(Role.default == True).all()
+        insp = inspect(target)
+        commit = False if insp.pending else True
+        for r in roles:
+            target.roles.append(r)
+        target.save(commit=commit)

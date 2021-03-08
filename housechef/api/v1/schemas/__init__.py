@@ -10,7 +10,9 @@ from .recipe_type import RecipeTypeSchema
 from .tag import TagSchema
 from .role import RoleSchema
 from .user import UserSchema
+from .dish_type import DishTypeSchema
 
+from .diet_type import DietTypeSchema
 
 __all__ = [
     "UserSchema",
@@ -25,4 +27,6 @@ __all__ = [
     "MealSchema",
     "DietTypeSchema",
     "RoleSchema",
+    "DishTypeSchema",
+    "DietTypeSchema",
 ]

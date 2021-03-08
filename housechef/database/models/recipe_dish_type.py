@@ -10,16 +10,25 @@ class RecipeDishType(db.Model):
     )
 
     """Primary Keys"""
+    # Parent
     recipe_id = db.Column(
         db.Integer, db.ForeignKey("recipes.id"), primary_key=True, nullable=False
     )
+    # Child
     dish_type_id = db.Column(
         db.Integer, db.ForeignKey("dish_types.id"), primary_key=True, nullable=False
     )
 
     """Relationships"""
-    recipe = db.relationship("Recipe", back_populates="dish_types")
-    dish_type = db.relationship("DishType", back_populates="recipes")
+    # Parent
+    recipe = db.relationship("Recipe", back_populates="recipe_dish_types")
+    # Child
+    dish_type = db.relationship("DishType", back_populates="recipes", lazy="joined")
+
+    def __init__(self, dish_type=None, recipe=None):
+        """Called when appending DishType objects to Recipe objects, child used as first arg"""
+        self.dish_type = dish_type
+        self.recipe = recipe
 
     def __repr__(self):
         return f"<RecipeDishType - {self.recipe.name} / {self.dish_type.name}>"

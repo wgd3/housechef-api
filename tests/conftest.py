@@ -24,6 +24,8 @@ register(CuisineFactory)
 register(IngredientFactory)
 register(MealFactory)
 
+pytest_plugins = ("celery.contrib.pytest",)
+
 
 @pytest.fixture(scope="session")
 def app():

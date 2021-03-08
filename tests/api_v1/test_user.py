@@ -231,3 +231,43 @@ class TestUserListGET:
 
         rep = client.get(users_url, headers=test_user_headers)
         assert rep.status_code == 401
+
+
+@pytest.mark.usefixtures("db", "client")
+class TestUserAuthLogin:
+    def setup(self):
+        self.login_url = url_for("api_v1.auth_login")
+        self.user = User.create(
+            username="test",
+            email="test@test.com",
+            password="test",
+            household_id=1,
+        )
+
+    def test_successful_login(self, client, db):
+
+        resp = client.post(
+            self.login_url, json={"username": "test", "password": "test"}
+        )
+
+        assert resp.status_code == 200
+        assert "access_token" in resp.json
+        assert "refresh_token" in resp.json
+
+    def test_missing_username(self, client, db):
+
+        resp = client.post(self.login_url, json={"password": "test"})
+
+        assert resp.status_code == 400
+
+    def test_missing_password(self, client, db):
+
+        resp = client.post(self.login_url, json={"username": "test"})
+
+        assert resp.status_code == 400
+
+    def test_incorrect_password(self, client, db):
+
+        resp = client.post(self.login_url, json={"username": "test", "password": "tt"})
+
+        assert resp.status_code == 401
