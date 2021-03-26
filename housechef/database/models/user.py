@@ -1,7 +1,9 @@
-from datetime import date
+from datetime import date, timedelta
+from time import time
+from jwt import encode as encode_jwt, decode as decode_jwt, InvalidTokenError
 
 from flask import current_app
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, decode_token
 from sqlalchemy import event, inspect
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -13,7 +15,7 @@ from housechef.database.mixins import (
     relationship,
     TimestampMixin,
 )
-from housechef.extensions import db, jwt, pwd_context
+from housechef.extensions import db, jwt as jwt_ext, pwd_context
 from .role import Role
 
 
@@ -58,7 +60,7 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     # Register a callback function that takes whatever object is passed in as the
     # identity when creating JWTs and converts it to a JSON serializable format.
     @staticmethod
-    @jwt.user_identity_loader
+    @jwt_ext.user_identity_loader
     def user_identity_lookup(user):
         return {
             "id": user.id,
@@ -72,7 +74,7 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
     # successful lookup, or None if the lookup failed for any reason (for example
     # if the user has been deleted from the database).
     @staticmethod
-    @jwt.user_lookup_loader
+    @jwt_ext.user_lookup_loader
     def user_lookup_callback(_jwt_header, jwt_data):
         identity = jwt_data["sub"]
         return User.query.filter_by(id=identity["id"]).one_or_none()
@@ -116,6 +118,31 @@ class User(PkModel, TimestampMixin, LookupByNameMixin):
             - ((today.month, today.day) < (self.birthday.month, self.birthday.day))
         )
         return age
+
+    def get_password_reset_token(self, expires_in: int = 3600):
+        return encode_jwt(
+            {"reset_password": self.id, "exp": time() + expires_in},
+            current_app.config["SECRET_KEY"],
+            algorithm=current_app.config["JWT_ALGORITHM"],
+        )
+
+    @classmethod
+    def verify_password_reset_token(cls, token):
+        user = None
+        try:
+            token_data = decode_jwt(
+                token,
+                current_app.config["SECRET_KEY"],
+                algorithms=[current_app.config["JWT_ALGORITHM"]],
+            )
+            user_id = token_data["reset_password"]
+            user = cls.get_by_id(user_id)
+        except InvalidTokenError as ite:
+            current_app.logger.error(
+                f"Someone is trying to use an invalid token to reset a user password!\n{str(ite)}"
+            )
+
+        return user
 
 
 @event.listens_for(User, "after_insert")

@@ -1,13 +1,13 @@
 from http import HTTPStatus
 
-from flask import jsonify
+from flask import jsonify, abort
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
     get_jwt_identity,
     jwt_required,
 )
-from flask_restx import fields, Namespace, Resource
+from flask_restx import fields, Namespace, Resource, reqparse
 
 from housechef.database.models import User
 from housechef.extensions import pwd_context
@@ -64,3 +64,42 @@ class RefreshTokenResource(Resource):
         user = User.get_by_id(user_identity["id"])
         access_token = user.get_refresh_token()
         return {"access_token": access_token}, HTTPStatus.OK
+
+
+@ns.route("/reset_password_request", endpoint="reset_password_request")
+@ns.response(HTTPStatus.OK.value, HTTPStatus.OK.phrase)
+@ns.response(HTTPStatus.BAD_REQUEST.value, HTTPStatus.BAD_REQUEST.phrase)
+class ResetPasswordRequest(Resource):
+
+    arg_parser = reqparse.RequestParser()
+    arg_parser.add_argument(
+        "reset_token",
+        type=str,
+        required=True,
+    )
+
+    def get(self):
+        args = self.arg_parser.parse_args()
+        if args.get("reset_token", None) is None:
+            abort(400)
+
+    def post(self):
+        """Endpoint for triggering a password reset email to be sent"""
+        user_email = ns.payload["email"]
+        if user_email is None or user_email == "":
+            # TODO use a marshmallow model for email validation?
+            abort(401, "Invalid email!")
+
+        user = User.query.filter(User.email == user_email).one_or_none()
+        if user:
+            pass
+
+        return {
+            "message": "Password reset requested, please check your inbox for instructions!"
+        }, 200
+
+
+@ns.route("/reset_password/<token>", endpoint="reset_password")
+class UserPasswordResource(Resource):
+    def get(self, token: str):
+        pass

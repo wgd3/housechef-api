@@ -12,7 +12,7 @@ from housechef.extensions import apispec, celery, db, jwt, mail, migrate, spoon
 
 def create_app(testing=False) -> Flask:
     """Application factory, used to create application"""
-    app = Flask("housechef")
+    app = Flask("housechef", template_folder="templates")
     app.config.from_object("housechef.config")
 
     if testing is True:
@@ -65,6 +65,7 @@ def register_blueprints(app: Flask):
 def init_celery(app=None):
     app = app or create_app()
     celery.conf.update(app.config.get("CELERY", {}))
+    celery.conf["SERVER_NAME"] = app.config.get("SERVER_NAME")
 
     class ContextTask(celery.Task):
         """Make celery tasks work with Flask app context"""

@@ -1,9 +1,10 @@
 import random
 import time
 
-from flask import current_app
+from flask import current_app, render_template
 from flask_mail import Message
 
+from housechef.database.models import User
 from housechef.extensions import celery, mail
 
 
@@ -16,22 +17,32 @@ def send_email(self, subject, sender, recipients, text_body, html_body):
     >>> msg.html = html_body
     >>> mail.send(msg)
 
-    Initially pulled from https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-x-email-support
+    Initially pulled from https://blog.miguelgrinberg.com/post/using-celery-with-flask
     """
-    # with current_app.app_context() as app:
-    current_app.logger.debug(f"Testing app context")
-    verb = ["Starting up", "Booting", "Repairing", "Loading", "Checking"]
-    adjective = ["master", "radiant", "silent", "harmonic", "fast"]
-    noun = ["solar array", "particle reshaper", "cosmic ray", "orbiter", "bit"]
-    message = ""
-    total = random.randint(1, 10)
-    for i in range(total):
-        if not message or random.random() < 0.25:
-            message = "{0} {1} {2}...".format(
-                random.choice(verb), random.choice(adjective), random.choice(noun)
-            )
-        self.update_state(
-            state="PROGRESS", meta={"current": i, "total": total, "status": message}
-        )
-        time.sleep(1)
-    return {"current": 100, "total": 100, "status": "Task completed!", "result": 42}
+    pass
+
+
+@celery.task
+def send_async_email(app, msg):
+    with app.app_context():
+        mail.send(msg)
+
+
+@celery.task
+def send_password_reset_email(user: User):
+    msg = Message(
+        "Password Reset Request on Housechef",
+        recipients=[user.email],
+        sender="noreply@housechef.io",
+        body=render_template(
+            "email_templates/reset_password.txt.j2",
+            user=user,
+            token=user.get_password_reset_token(),
+        ),
+        html=render_template(
+            "email_templates/reset_password.html.j2",
+            user=user,
+            token=user.get_password_reset_token(),
+        ),
+    )
+    mail.send(msg)
